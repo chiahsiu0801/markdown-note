@@ -1,6 +1,15 @@
+import Heading from "./_components/heading";
+import Heroes from "./_components/heroes";
+import Footer from "./_components/footer";
+
+
 const LandingPage = () => {
   return ( 
-    <h2>Landing page</h2>
+    <div className="min-h-screen flex flex-col items-center">
+      <Heading />
+      <Heroes />
+      <Footer />
+    </div>
    );
 }
  
