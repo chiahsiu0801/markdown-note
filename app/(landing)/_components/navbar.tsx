@@ -8,7 +8,7 @@ const font = Poppins({
   weight: ["400", "600"]
 });
 
-const Heading = () => {
+const Navbar = () => {
   return ( 
     <div className="w-full h-16 p-4 flex justify-between items-center fixed">
       <h1 className={cn("font-semibold text-xl", font.className)}>MARKDOWN NOTE</h1>
@@ -20,4 +20,4 @@ const Heading = () => {
    );
 }
  
-export default Heading;
+export default Navbar;
