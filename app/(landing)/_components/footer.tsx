@@ -1,6 +1,8 @@
 const Footer = () => {
   return ( 
-    <h2>footer</h2>
+    <div className="w-full py-4 text-center">
+      &copy; 2024 MARKDOWN NOTE. All rights reserved.
+    </div>
    );
 }
  
