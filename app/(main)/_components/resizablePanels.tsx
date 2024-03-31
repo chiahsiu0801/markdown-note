@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
+import { cn } from "@/lib/utils";
 
 import Editor from "@/components/editor";
 import Document from "@/components/document";
@@ -8,6 +9,7 @@ import Document from "@/components/document";
 const ResizablePanels = () => {
   const [input, setInput] = useState('');
   const [leftWidth, setLeftWidth] = useState(50);
+  const [editorBorder, setEditorBorder] = useState(true);
 
   const startResizing = (mouseDownEvent: React.MouseEvent<HTMLDivElement>) => {
     const startX = mouseDownEvent.clientX;
@@ -35,8 +37,8 @@ const ResizablePanels = () => {
 
   return ( 
     <div className="flex items-center h-screen p-4 gap-2">
-      <div className="h-full rounded-lg" style={{ width: `calc(${leftWidth}% - 10.5px)` }}>
-        <Editor input={input} setInput={setInput} />
+      <div className={cn(`flex h-full rounded-lg bg-slate-400 border-2 border-slate-400`, editorBorder && `border-blue-400 shadow-xl shadow-black/60`)} style={{ width: `calc(${leftWidth}% - 10.5px)` }} tabIndex={0}>
+        <Editor input={input} setInput={setInput} setEditorBorder={setEditorBorder} />
       </div>
       <div className="cursor-ew-resize bg-black w-[5px] h-1/6 rounded-xl" onMouseDown={startResizing}></div>
       <div className="h-full overflow-auto bg-slate-400 rounded-lg flex flex-col" style={{ width: `calc(${100 - leftWidth}% - 10.5px)` }}>
