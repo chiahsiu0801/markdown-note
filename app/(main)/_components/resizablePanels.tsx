@@ -2,7 +2,11 @@
 
 import { useState } from "react";
 
+import Editor from "@/components/editor";
+import Document from "@/components/document";
+
 const ResizablePanels = () => {
+  const [input, setInput] = useState('');
   const [leftWidth, setLeftWidth] = useState(50);
 
   const startResizing = (mouseDownEvent: React.MouseEvent<HTMLDivElement>) => {
@@ -30,10 +34,14 @@ const ResizablePanels = () => {
   }
 
   return ( 
-    <div className="flex h-screen p-2">
-      <div className="h-full overflow-auto bg-slate-400" style={{ width: `${leftWidth}%` }}>Left panel</div>
-      <div className="cursor-ew-resize bg-black w-[5px] h-full" onMouseDown={startResizing}></div>
-      <div className="h-full overflow-auto bg-slate-600" style={{ width: `${100 - leftWidth}%` }}>Right panel</div>
+    <div className="flex items-center h-screen p-4 gap-2">
+      <div className="h-full rounded-lg" style={{ width: `calc(${leftWidth}% - 10.5px)` }}>
+        <Editor input={input} setInput={setInput} />
+      </div>
+      <div className="cursor-ew-resize bg-black w-[5px] h-1/6 rounded-xl" onMouseDown={startResizing}></div>
+      <div className="h-full overflow-auto bg-slate-400 rounded-lg flex flex-col" style={{ width: `calc(${100 - leftWidth}% - 10.5px)` }}>
+        <Document input={input} width={100 - leftWidth} />
+      </div>
     </div>
    );
 }
