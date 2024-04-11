@@ -9,7 +9,9 @@ import Document from "@/components/document";
 const ResizablePanels = () => {
   const [input, setInput] = useState('');
   const [leftWidth, setLeftWidth] = useState(50);
-  const [editorBorder, setEditorBorder] = useState(true);
+  const [editorFocus, setEditorFocus] = useState(true);
+
+  const editorContainerRef = useRef<HTMLDivElement>(null);
 
   const startResizing = (mouseDownEvent: React.MouseEvent<HTMLDivElement>) => {
     const startX = mouseDownEvent.clientX;
@@ -35,10 +37,34 @@ const ResizablePanels = () => {
     mouseDownEvent.preventDefault();
   }
 
+  const handleClickOutside = (target: EventTarget) => {
+    if(editorContainerRef.current && target instanceof Node && editorContainerRef.current.contains(target)) {
+      console.log('focus');
+      setEditorFocus(true);
+    } else {
+      console.log('blur');
+      setEditorFocus(false);
+    }
+  }
+
   return ( 
-    <div className="flex items-center h-screen p-4 gap-2">
-      <div className={cn(`flex h-full rounded-lg bg-slate-400 border-2 border-slate-400`, editorBorder && `border-blue-400 shadow-xl shadow-black/60`)} style={{ width: `calc(${leftWidth}% - 10.5px)` }} tabIndex={0}>
-        <Editor input={input} setInput={setInput} setEditorBorder={setEditorBorder} />
+    <div
+      className="flex items-center h-screen p-4 gap-2"
+      onClick={e => handleClickOutside(e.target)}
+    >
+      <div
+        className={cn(`flex h-full rounded-lg bg-slate-400 border-2 border-slate-400 p-5 relative`,editorFocus && `border-blue-400 shadow-xl shadow-black/60`)}
+        style={{ width: `calc(${leftWidth}% - 10.5px)` }}
+        // tabIndex={0}
+        // onClick={() => setEditorBorder(true)}
+        ref={editorContainerRef}
+        // onFocus={(e) => {
+        //   e.preventDefault();
+        //   setEditorBorder(true);
+        // }}
+        // onBlur={() => setEditorBorder(false)}
+      >
+        <Editor input={input} setInput={setInput} editorFocus={editorFocus} />
       </div>
       <div className="cursor-ew-resize bg-black w-[5px] h-1/6 rounded-xl" onMouseDown={startResizing}></div>
       <div className="h-full overflow-auto bg-slate-400 rounded-lg flex flex-col" style={{ width: `calc(${100 - leftWidth}% - 10.5px)` }}>
