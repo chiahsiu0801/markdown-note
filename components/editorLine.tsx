@@ -1,15 +1,16 @@
 type EditorLineProps = {
-  row: string;
+  row: string,
+  width: number,
 };
 
-const EditorLine = ({ row }: EditorLineProps) => {
-  return ( 
-    <div className="w-full h-[28px] whitespace-pre-wrap break-words leading-6">
+const EditorLine = ({ row, width }: EditorLineProps) => {
+  return (
+    <div className={`w-[${width}px] h-[28px] whitespace-pre-wrap break-words leading-6`}>
       <span>
-        <span className="text-lg h-[28px] block">{row}</span>
+        <span className="text-lg">{row}</span>
       </span>
     </div>
-   );
+  );
 }
  
 export default EditorLine;

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo, useCallback } from "react";
 import { position } from 'caret-pos';
 import { cn } from "@/lib/utils";
 
@@ -11,7 +11,9 @@ type EditorProps = {
 }
 
 const Editor = ({ input, setInput, editorFocus }: EditorProps) => {
-  const [lineNumbers, setLineNumbers] = useState('');
+  const [lineNumbers, setLineNumbers] = useState<number[]>([]);
+  const [rows, setRows] = useState<string[]>([]);
+  const [textareaWidth, setTextareaWidth] = useState(0);
   const [highlightedInput, setHighlightedInput] = useState('<div class="w-full h-6 bg-white/10 text-transparent">' + input + '</div>');
 
   const lineNumbersRef = useRef<HTMLDivElement>(null);
@@ -32,9 +34,18 @@ const Editor = ({ input, setInput, editorFocus }: EditorProps) => {
     setHighlightedInput(target.value.substring(0, highlightStart) + highlightedLine + target.value.substring(highlightEnd));
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>): void => {
-    const target = e.target as HTMLTextAreaElement;
+  const handleCaret = useCallback((target: HTMLTextAreaElement): void => {
+    setTimeout(() => {
+      const pos = position(target);
 
+      target.style.top = pos.top - 3 + 'px';
+      caretRef.current!.style.left = pos.left + 'px';
+      caretRef.current!.style.top = pos.top + 'px';
+    }, 0);
+  }, []);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>): void => {
+    const target = e.target as HTMLTextAreaElement;
 
     switch (e.key) {
       case 'Tab':
@@ -52,37 +63,30 @@ const Editor = ({ input, setInput, editorFocus }: EditorProps) => {
         setTimeout(() => {
           target.selectionStart = target.selectionEnd = start + 1;
 
-          handleCaret(e);
+          handleCaret(target);
         }, 0);
 
         break;
       default:
-        handleCaret(e);
+        console.log(e.key);
+        handleCaret(target);
 
         break;
     }
-  }
-
-  const handleCaret = (e: React.KeyboardEvent<HTMLTextAreaElement> | React.ClipboardEvent<HTMLTextAreaElement>): void => {
-    const target = e.target as HTMLTextAreaElement;
-
-    setTimeout(() => {
-      const pos = position(target);
-      console.log(pos);
-      target.style.left = pos.left + 'px';
-      target.style.top = pos.top - 3 + 'px';
-      caretRef.current!.style.left = pos.left + 'px';
-      caretRef.current!.style.top = pos.top + 'px';
-    }, 0);
-  }
+  }, [input, setInput, handleCaret]);
 
   useEffect(() => {
-    const lineCount = input.split('\n').length;
-    // Generate number 1 to number lineCount string used in line number textarea
-    const lineNumbers = Array.from({ length: lineCount }, (_, i) => `<div class="h-[28px] pt-[2px]">${i + 1}</div>`).join('\n');
+    const resizeObserver = new ResizeObserver(() => {
+      if(textareaRef.current) {
+        handleCaret(textareaRef.current);
+        setTextareaWidth(textareaRef.current.getBoundingClientRect().width);
+      }
+    });
 
-    setLineNumbers(lineNumbers);
-  }, [input]);
+    resizeObserver.observe(textareaRef.current as HTMLTextAreaElement);
+
+    return () => resizeObserver.disconnect();
+  }, [handleCaret]);
 
   // Make lineNumbers is scrolled synchronously with textarea
   useEffect(() => {
@@ -112,20 +116,100 @@ const Editor = ({ input, setInput, editorFocus }: EditorProps) => {
     }
   }, [editorFocus]);
 
+  useEffect(() => {
+    let lineCountsOfRows: number[] = [];
+    let lines: string[] = [];
+
+    input.split('\n').map((row) => {
+      let count = 0;
+
+      if(textareaRef.current) {
+        const textareaStyles = window.getComputedStyle(textareaRef.current);
+
+        const font = `${textareaStyles.fontSize} ${textareaStyles.fontFamily}`;
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+
+        if(context) {
+          context.font = font;
+        }
+
+        const words = row.split(' ');
+        let currentLine = '';
+
+        if(row === '') {
+          lines.push(currentLine);
+        }
+
+        for(let i = 0; i < words.length; i++) {
+          if(words[i][0] === '\t') {
+            console.log('tab');
+            words[i] = '    ' + words[i].slice(1);
+          }
+
+          const wordWidth = context?.measureText(words[i] + ' ').width;
+          const lineWidth = context?.measureText(currentLine).width;
+
+
+          if(lineWidth && wordWidth && lineWidth + wordWidth - context?.measureText(' ').width > textareaWidth) {
+            console.log('lineWidth + wordWidth: ', lineWidth + wordWidth);
+            lines.push(currentLine);
+
+            count++;
+            currentLine = words[i] + ' ';
+          } else {
+            currentLine += words[i] + ' ';
+          }
+        }
+
+        if(currentLine.trim() !== '') {
+          count++;
+          lines.push(currentLine);
+        }
+
+        lineCountsOfRows.push(count);
+      }
+    })
+
+    let lineNumbers = [];
+    let i = 1;
+
+    while(lineCountsOfRows.length > 0) {
+      const numLinesOfSentence = lineCountsOfRows.shift();
+      lineNumbers.push(i);
+
+      if(numLinesOfSentence && numLinesOfSentence > 1) {
+        Array(numLinesOfSentence - 1).fill('').forEach((_) => lineNumbers.push(''));
+      }
+
+      i++;
+    }
+
+    setLineNumbers(lineNumbers);
+    setRows(lines);
+  }, [input, textareaWidth]);
+
   return (
     <>
       <div
         ref={lineNumbersRef}
         className="w-12 pr-3 text-right text-lg font-mono rounded-lg rounded-r-none bg-slate-400 text-gray-600 border-gray-300 overflow-hidden resize-none select-none focus:outline-none cursor-default leading-6"
-        dangerouslySetInnerHTML={{ __html: lineNumbers }}
         style={{ userSelect: 'none' }}
-      />
-      <div className="h-full text-lg bg-slate-400 absolute font-mono z-10" ref={highlightRef} style={{ width: 'calc(100% - 88px)', height: 'calc(100% - 40px)', left: '68px' }}>
+      >
         {
-          input.split('\n').map((row, index) => {
-            return <EditorLine key={index} row={row} />
+          lineNumbers.map((lineNumber, index) => {
+            return lineNumber ? <div className="h-[28px] pt-[2px]" key={index}>{lineNumber}</div> : <div className="h-[28px] pt-[2px]" key={index}>&nbsp;</div>;
           })
         }
+      </div>
+      <div className="h-full text-lg bg-slate-400 absolute font-mono z-10" ref={highlightRef} style={{ width: 'calc(100% - 88px)', height: 'calc(100% - 40px)', left: '68px' }}>
+        <div>
+          {
+            rows.map((row, index) => {
+              return <EditorLine key={index} row={row} width={textareaWidth} />
+            })
+          }
+        </div>
         <div
           className={
             cn(`w-[2px] h-6 bg-blue-500 absolute top-[3px] left-0 animate-blink`,
@@ -142,17 +226,17 @@ const Editor = ({ input, setInput, editorFocus }: EditorProps) => {
             handleHighlight(e.target);
           }}
           onKeyDown={handleKeyDown}
-          onPaste={handleCaret}
+          onPaste={(e) => {handleCaret(e.currentTarget)}}
           onBlur={(e) => {
             if(editorFocus) {
               e.currentTarget.focus();
             }
           }}
-          wrap="off"
+          wrap="on"
           autoComplete="off"
           autoCapitalize="off"
           spellCheck="false"
-          className="w-[1px] h-[28px] text-lg text-transparent bg-transparent font-mono resize-none focus:outline-none absolute left-0 top-0 z-20 overflow-hidden"
+          className="w-full h-[28px] text-lg text-transparent bg-transparent font-mono resize-none focus:outline-none absolute left-0 top-0 z-20 overflow-hidden"
         />
       </div>
     </>
