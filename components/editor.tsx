@@ -14,6 +14,7 @@ const Editor = ({ input, setInput, editorFocus }: EditorProps) => {
   const [lineNumbers, setLineNumbers] = useState<number[]>([]);
   const [rows, setRows] = useState<string[]>([]);
   const [textareaWidth, setTextareaWidth] = useState(0);
+  const [activeRowNumber, setActiveRowNumber] = useState(1);
   const [highlightedInput, setHighlightedInput] = useState('<div class="w-full h-6 bg-white/10 text-transparent">' + input + '</div>');
 
   const lineNumbersRef = useRef<HTMLDivElement>(null);
@@ -37,6 +38,11 @@ const Editor = ({ input, setInput, editorFocus }: EditorProps) => {
   const handleCaret = useCallback((target: HTMLTextAreaElement): void => {
     setTimeout(() => {
       const pos = position(target);
+
+      const textUpToCaret = target.value.substring(0, pos.pos);
+      const rowNumber = (textUpToCaret.match(/\n/g) || []).length + 1;
+
+      setActiveRowNumber(rowNumber);
 
       target.style.top = pos.top - 3 + 'px';
       caretRef.current!.style.left = pos.left + 'px';
@@ -198,7 +204,9 @@ const Editor = ({ input, setInput, editorFocus }: EditorProps) => {
       >
         {
           lineNumbers.map((lineNumber, index) => {
-            return lineNumber ? <div className="h-[28px] pt-[2px]" key={index}>{lineNumber}</div> : <div className="h-[28px] pt-[2px]" key={index}>&nbsp;</div>;
+            return lineNumber ?
+              <div className={cn(`h-[28px] pt-[2px]`, (lineNumber === activeRowNumber) && `text-[#e6edf3]`)} key={index}>{lineNumber}</div> :
+              <div className="h-[28px] pt-[2px]" key={index}>&nbsp;</div>;
           })
         }
       </div>
