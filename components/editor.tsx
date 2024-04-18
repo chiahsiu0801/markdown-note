@@ -14,41 +14,103 @@ const Editor = ({ input, setInput, editorFocus }: EditorProps) => {
   const [lineNumbers, setLineNumbers] = useState<number[]>([]);
   const [rows, setRows] = useState<string[]>([]);
   const [textareaWidth, setTextareaWidth] = useState(0);
-  const [activeRowNumber, setActiveRowNumber] = useState(1);
-  const [highlightedInput, setHighlightedInput] = useState('<div class="w-full h-6 bg-white/10 text-transparent">' + input + '</div>');
+  const [activeRows, setActiveRows] = useState<number[]>([]);
 
   const lineNumbersRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const highlightRef = useRef<HTMLDivElement>(null);
   const caretRef = useRef<HTMLDivElement>(null);
 
-  const handleHighlight = (target: HTMLTextAreaElement): void => {
-    const caretIndex = target.selectionStart ?? 0;
+  const textSplitIntoRow = useCallback((value: string[]): [number[], string[]] => {
+    let lineCountsOfRows: number[] = [];
+    let lines: string[] = [];
 
-    const start = target.value.lastIndexOf('\n', caretIndex - 1);
-    const end = target.value.indexOf('\n', caretIndex);
+    value.map((row) => {
+      let count = 0;
 
-    const highlightStart = start === -1 ? 0 : start + 1;
-    const highlightEnd = end === -1 ? target.value.length : end;
+      if(textareaRef.current) {
+        const textareaStyles = window.getComputedStyle(textareaRef.current);
 
-    const highlightedLine = '<div class="w-full h-6 bg-white/10 text-transparent">' + target.value.substring(highlightStart, highlightEnd) + '</div>';
-    setHighlightedInput(target.value.substring(0, highlightStart) + highlightedLine + target.value.substring(highlightEnd));
-  };
+        const font = `${textareaStyles.fontSize} ${textareaStyles.fontFamily}`;
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+
+        if(context) {
+          context.font = font;
+        }
+
+        const words = row.split(' ');
+        let currentLine = '';
+
+        if(row === '') {
+          lines.push(currentLine);
+        }
+
+        for(let i = 0; i < words.length; i++) {
+          if(words[i][0] === '\t') {
+            console.log('tab');
+            words[i] = '    ' + words[i].slice(1);
+          }
+
+          const wordWidth = context?.measureText(words[i] + ' ').width;
+          const lineWidth = context?.measureText(currentLine).width;
+
+
+          if(lineWidth && wordWidth && lineWidth + wordWidth - context?.measureText(' ').width > textareaWidth) {
+            console.log('lineWidth + wordWidth: ', lineWidth + wordWidth);
+            lines.push(currentLine);
+
+            count++;
+            currentLine = words[i] + ' ';
+          } else {
+            currentLine += words[i] + ' ';
+          }
+        }
+
+        if(currentLine.trim() !== '') {
+          count++;
+          lines.push(currentLine);
+        }
+
+        lineCountsOfRows.push(count);
+      }
+    })
+
+    return [lineCountsOfRows, lines];
+  }, [textareaWidth]);
 
   const handleCaret = useCallback((target: HTMLTextAreaElement): void => {
     setTimeout(() => {
       const pos = position(target);
 
       const textUpToCaret = target.value.substring(0, pos.pos);
-      const rowNumber = (textUpToCaret.match(/\n/g) || []).length + 1;
+      const rowNumber = (textUpToCaret.match(/\n/g) || []).length;
+      const end = target.value.indexOf('\n', pos.pos);
+      const highlightEnd = target.value.substring(0, end === -1 ? target.value.length : end);
+      const linesPerRow = textSplitIntoRow(highlightEnd.split('\n'))[0];
 
-      setActiveRowNumber(rowNumber);
+      let activeRow = 0;
+
+      for(let i = 0; i < linesPerRow.length - 1; i++) {
+        const currentLines = linesPerRow[i] === 0 ? 1 : linesPerRow[i];
+
+        activeRow += currentLines;
+      }
+
+      const activeRows = [activeRow];
+
+      for(let i = 1; i < linesPerRow[rowNumber]; i++) {
+        activeRows.push(activeRow + i);
+      }
+
+      console.log('activeRows: ', activeRows);
+      setActiveRows(activeRows);
 
       target.style.top = pos.top - 3 + 'px';
       caretRef.current!.style.left = pos.left + 'px';
       caretRef.current!.style.top = pos.top + 'px';
     }, 0);
-  }, []);
+  }, [textSplitIntoRow]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>): void => {
     const target = e.target as HTMLTextAreaElement;
@@ -59,8 +121,6 @@ const Editor = ({ input, setInput, editorFocus }: EditorProps) => {
 
         const start = target.selectionStart ?? 0;
         const end = target.selectionEnd ?? 0;
-
-        console.log(start, end);
 
         const inputWithTab = input.substring(0, start) + '\t' + input.substring(end);
         setInput(inputWithTab);
@@ -123,59 +183,7 @@ const Editor = ({ input, setInput, editorFocus }: EditorProps) => {
   }, [editorFocus]);
 
   useEffect(() => {
-    let lineCountsOfRows: number[] = [];
-    let lines: string[] = [];
-
-    input.split('\n').map((row) => {
-      let count = 0;
-
-      if(textareaRef.current) {
-        const textareaStyles = window.getComputedStyle(textareaRef.current);
-
-        const font = `${textareaStyles.fontSize} ${textareaStyles.fontFamily}`;
-        const canvas = document.createElement('canvas');
-        const context = canvas.getContext('2d');
-
-        if(context) {
-          context.font = font;
-        }
-
-        const words = row.split(' ');
-        let currentLine = '';
-
-        if(row === '') {
-          lines.push(currentLine);
-        }
-
-        for(let i = 0; i < words.length; i++) {
-          if(words[i][0] === '\t') {
-            console.log('tab');
-            words[i] = '    ' + words[i].slice(1);
-          }
-
-          const wordWidth = context?.measureText(words[i] + ' ').width;
-          const lineWidth = context?.measureText(currentLine).width;
-
-
-          if(lineWidth && wordWidth && lineWidth + wordWidth - context?.measureText(' ').width > textareaWidth) {
-            console.log('lineWidth + wordWidth: ', lineWidth + wordWidth);
-            lines.push(currentLine);
-
-            count++;
-            currentLine = words[i] + ' ';
-          } else {
-            currentLine += words[i] + ' ';
-          }
-        }
-
-        if(currentLine.trim() !== '') {
-          count++;
-          lines.push(currentLine);
-        }
-
-        lineCountsOfRows.push(count);
-      }
-    })
+    let [lineCountsOfRows, lines] = textSplitIntoRow(input.split('\n'));
 
     let lineNumbers = [];
     let i = 1;
@@ -193,7 +201,7 @@ const Editor = ({ input, setInput, editorFocus }: EditorProps) => {
 
     setLineNumbers(lineNumbers);
     setRows(lines);
-  }, [input, textareaWidth]);
+  }, [input, textareaWidth, textSplitIntoRow]);
 
   return (
     <>
@@ -205,7 +213,7 @@ const Editor = ({ input, setInput, editorFocus }: EditorProps) => {
         {
           lineNumbers.map((lineNumber, index) => {
             return lineNumber ?
-              <div className={cn(`h-[28px] pt-[2px]`, (lineNumber === activeRowNumber) && `text-[#e6edf3]`)} key={index}>{lineNumber}</div> :
+              <div className={cn(`h-[28px] pt-[2px]`, (activeRows.includes(index)) && `text-[#e6edf3]`)} key={index}>{lineNumber}</div> :
               <div className="h-[28px] pt-[2px]" key={index}>&nbsp;</div>;
           })
         }
@@ -214,7 +222,13 @@ const Editor = ({ input, setInput, editorFocus }: EditorProps) => {
         <div>
           {
             rows.map((row, index) => {
-              return <EditorLine key={index} row={row} width={textareaWidth} />
+              let active = false;
+
+              if(activeRows.includes(index)) {
+                active = true;
+              }
+
+              return <EditorLine key={index} row={row} width={textareaWidth} active={active} />
             })
           }
         </div>
@@ -231,7 +245,6 @@ const Editor = ({ input, setInput, editorFocus }: EditorProps) => {
           autoFocus
           onChange={(e) => {
             setInput(e.target.value);
-            handleHighlight(e.target);
           }}
           onKeyDown={handleKeyDown}
           onPaste={(e) => {handleCaret(e.currentTarget)}}
