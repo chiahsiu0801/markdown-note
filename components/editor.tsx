@@ -18,7 +18,7 @@ const Editor = ({ input, setInput, editorFocus }: EditorProps) => {
 
   const lineNumbersRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const highlightRef = useRef<HTMLDivElement>(null);
+  const textRef = useRef<HTMLDivElement>(null);
   const caretRef = useRef<HTMLDivElement>(null);
 
   const textSplitIntoRow = useCallback((value: string[]): [number[], string[]] => {
@@ -109,6 +109,31 @@ const Editor = ({ input, setInput, editorFocus }: EditorProps) => {
       target.style.top = pos.top - 3 + 'px';
       caretRef.current!.style.left = pos.left + 'px';
       caretRef.current!.style.top = pos.top + 'px';
+
+      // Scroll editor and line numbers if caret is invisible on the screen
+      if(caretRef.current && textRef.current && lineNumbersRef.current) {
+        const textRect = textRef.current.getBoundingClientRect();
+        const caretRect = caretRef.current.getBoundingClientRect();
+
+        // If caret is four lines below the top of editor, scroll editor and line numbers to make more lines visible
+        const caretOutOfTop = caretRect.top - (28 * 4) < textRect.top;
+        const caretOutOfBottom = caretRect.bottom > textRect.bottom;
+
+        if(caretOutOfTop) {
+          textRef.current.scrollTop = pos.top - (28 * 4);
+          lineNumbersRef.current.scrollTop = pos.top - (28 * 4);
+        } else if(caretOutOfBottom) {
+          textRef.current.scrollTop = pos.top + 28 - textRect.height;
+
+          setTimeout(() => {
+            if(lineNumbersRef.current && textRef.current) {
+              lineNumbersRef.current.scrollTop = pos.top + 28 - textRect.height;
+              console.log('textRefScrollTop: ', textRef.current.scrollTop);
+              console.log('lineNumbersRefScrollTop: ', lineNumbersRef.current.scrollTop);
+            }
+          }, 0);
+        }
+      }
     }, 0);
   }, [textSplitIntoRow]);
 
@@ -156,21 +181,21 @@ const Editor = ({ input, setInput, editorFocus }: EditorProps) => {
 
   // Make lineNumbers is scrolled synchronously with textarea
   useEffect(() => {
-    const textareaNode = textareaRef.current;
+    // const textareaNode = textareaRef.current;
     const lineNumbersNode = lineNumbersRef.current;
-    const highlightNode = highlightRef.current;
+    // const highlightNode = textRef.current;
+    const textNode = textRef.current;
 
-    if(lineNumbersNode && textareaNode && highlightNode) {
+    if(lineNumbersNode && textNode) {
       const syncScroll = () => {
-          const scrollTop = textareaNode.scrollTop;
+          const scrollTop = textNode.scrollTop;
 
           lineNumbersNode.scrollTop = scrollTop;
-          highlightNode.scrollTop = scrollTop;
       };
 
-      textareaNode.addEventListener('scroll', syncScroll);
+      textNode.addEventListener('scroll', syncScroll);
 
-      return () => textareaNode.removeEventListener('scroll', syncScroll);
+      return () => textNode.removeEventListener('scroll', syncScroll);
     }
   }, []);
 
@@ -218,8 +243,8 @@ const Editor = ({ input, setInput, editorFocus }: EditorProps) => {
           })
         }
       </div>
-      <div className="h-full text-lg bg-slate-400 absolute font-mono z-10" ref={highlightRef} style={{ width: 'calc(100% - 88px)', height: 'calc(100% - 40px)', left: '68px' }}>
-        <div>
+      <div className="h-full text-lg bg-slate-400 absolute font-mono z-10 overflow-auto" ref={textRef} style={{ width: 'calc(100% - 88px)', height: 'calc(100% - 40px)', left: '68px' }}>
+        <div className="h-full">
           {
             rows.map((row, index) => {
               let active = false;
