@@ -37,19 +37,20 @@ const Editor = ({ input, setInput, editorFocus }: EditorProps) => {
 
     const spaceWidth = context?.measureText(' ').width;
 
-    value.map((row) => {
+    value.map((row: string) => {
       let count = 0;
 
       if(textareaRef.current) {
         // let words = row.split(' ');
         let words = [];
         let word = '';
-        const parentheses = [')', ']', '}'];
+        const openParentheses = ['(', '[', '{'];
+        const closeParentheses = [')', ']', '}'];
 
         for(let i = 0; i < row.length; i++) {
           word += row[i];
 
-          if(row[i] === ' ' || row[i] === '>' || row[i] === '-' || (parentheses.includes(row[i]) && !parentheses.includes(row[i + 1])) || i === row.length - 1) {
+          if(row[i] === ' ' || row[i] === '>' || row[i] === '-' || (closeParentheses.includes(row[i]) && !closeParentheses.includes(row[i + 1])) || (row[i] === '=' && openParentheses.includes(row[i + 1])) || i === row.length - 1) {
             words.push(word);
             word = '';
           }
