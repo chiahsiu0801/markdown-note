@@ -44,11 +44,12 @@ const Editor = ({ input, setInput, editorFocus }: EditorProps) => {
         // let words = row.split(' ');
         let words = [];
         let word = '';
+        const parentheses = [')', ']', '}'];
 
         for(let i = 0; i < row.length; i++) {
           word += row[i];
 
-          if(row[i] === ' ' || row[i] === ')' || row[i] === ']' || row[i] === '}' || row[i] === '>' || row[i] === '-' || i === row.length - 1) {
+          if(row[i] === ' ' || row[i] === '>' || row[i] === '-' || (parentheses.includes(row[i]) && !parentheses.includes(row[i + 1])) || i === row.length - 1) {
             words.push(word);
             word = '';
           }
@@ -60,24 +61,6 @@ const Editor = ({ input, setInput, editorFocus }: EditorProps) => {
           lines.push(currentLine);
         }
 
-        // const words = words.reduce((acc: string[], item: string) => {
-        //   if(context.measureText(item).width > textareaWidth) {
-        //     let index = 0;
-
-        //     while(context.measureText(item.substring(0, index)).width < textareaWidth) {
-        //       index++;
-        //     }
-
-        //     const part1 = item.substring(0, index);
-        //     const part2 = item.substring(index);
-
-        //     acc.push(part1, part2);
-        //   } else {
-        //     acc.push(item);
-        //   }
-
-        //   return acc;
-        // }, []);
 
         if(words.length === 1 && context.measureText(words[0]).width > textareaWidth) {
           let index = 1;
@@ -93,49 +76,35 @@ const Editor = ({ input, setInput, editorFocus }: EditorProps) => {
           words = [part1, part2];
         }
 
-        console.log(words);
-
         for(let i = 0; i < words.length; i++) {
           if(words[i][0] === '\t') {
             console.log('tab');
             words[i] = '    ' + words[i].slice(1);
           }
 
-          // const wordWidth = context.measureText(words[i] + ' ').width!;
           let wordWidth = context.measureText(words[i]).width!;
 
-          // console.log('words[i]: ', words[i]);
-          // console.log('words[i][words.length - 1]: ', words[i][words[i].length - 1])
-
           if(words[i][words[i].length - 1] === ' ') {
-            // console.log('space');
             wordWidth -= spaceWidth;
           }
 
           const lineWidth = context.measureText(currentLine).width!;
 
+          // console.log('words[i]: ', words[i]);
           // console.log('wordWidth: ', wordWidth);
           // console.log('lineWidth: ', lineWidth);
 
           // console.log('lineWidth + wordWidth: ', lineWidth + wordWidth);
           // console.log('textareaWidth: ', textareaWidth);
 
-          // if(lineWidth + wordWidth - context.measureText(' ').width > textareaWidth) {
           if(lineWidth + wordWidth > textareaWidth) {
-            // console.log('test');
+            console.log('over');
             lines.push(currentLine);
 
             count++;
-            // currentLine = words[i] + ' ';
             currentLine = words[i];
-
-            // console.log('over currentLine: ', currentLine);
           } else {
-            // currentLine += words[i] + ' ';
             currentLine += words[i];
-
-            // console.log('words[i]: ', words[i]);
-            // console.log('not over currentLine: ', currentLine);
           }
         }
 
@@ -153,12 +122,9 @@ const Editor = ({ input, setInput, editorFocus }: EditorProps) => {
 
   const handleCaret = useCallback((target: HTMLTextAreaElement): void => {
     setTimeout(() => {
-      // const pos = position(target);
       const posCorrection = Caret.getRelativePosition(target);
 
       console.log('posCorrection: ', posCorrection);
-
-      // console.log('pos: ', pos);
 
       const textUpToCaret = target.value.substring(0, target.selectionStart);
       const rowNumber = (textUpToCaret.match(/\n/g) || []).length;
@@ -175,14 +141,6 @@ const Editor = ({ input, setInput, editorFocus }: EditorProps) => {
       }
 
       const activeRowsArr = [activeRow];
-
-      // console.log('lineNumbers: ', lineNumbers);
-      // console.log('target: ', target.value.split(''));
-      // for(let i = 0; i < lineNumbers.length; i++) {
-      //   if(activeRowsArr.includes(i) && lineNumbers[i]) {
-      //     console.log('lineNumbers: ', lineNumbers[i]);
-      //   }
-      // }
 
       for(let i = 1; i < linesPerRow[rowNumber]; i++) {
         activeRowsArr.push(activeRow + i);
@@ -205,21 +163,13 @@ const Editor = ({ input, setInput, editorFocus }: EditorProps) => {
 
         // If caret is four lines below the top of editor, scroll editor and line numbers to make more lines visible
         const caretOutOfTop = caretRect.top - (28 * 4) < textRect.top;
+        // const caretOutOfTop = caretRect.top < textRect.top;
         const caretOutOfBottom = caretRect.bottom > textRect.bottom;
 
         if(caretOutOfTop) {
           textRef.current.scrollTop = posCorrection.top - (28 * 4);
-          lineNumbersRef.current.scrollTop = posCorrection.top - (28 * 4);
         } else if(caretOutOfBottom) {
           textRef.current.scrollTop = posCorrection.top + 28 - textRect.height;
-
-          setTimeout(() => {
-            if(lineNumbersRef.current && textRef.current) {
-              lineNumbersRef.current.scrollTop = posCorrection.top + 28 - textRect.height;
-              console.log('textRefScrollTop: ', textRef.current.scrollTop);
-              console.log('lineNumbersRefScrollTop: ', lineNumbersRef.current.scrollTop);
-            }
-          }, 0);
         }
       }
     }, 0);
@@ -255,7 +205,7 @@ const Editor = ({ input, setInput, editorFocus }: EditorProps) => {
   }, [input, setInput, handleCaret]);
 
   const handleCaretByClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    console.log('target: ', e.target);
+    const scrollOffset = textRef.current?.scrollTop;
 
     textareaRef.current?.blur();
 
@@ -271,10 +221,6 @@ const Editor = ({ input, setInput, editorFocus }: EditorProps) => {
     }
 
     range?.setStart(target, 0);
-
-    console.log('selection: ', selection?.toString().split(''));
-    console.log('range: ', range?.toString().split(''));
-    console.log('input: ', input.split(''));
 
     const selectionArr = selection!.toString().split('');
     let offset = 0;
@@ -296,62 +242,9 @@ const Editor = ({ input, setInput, editorFocus }: EditorProps) => {
 
         offset++;
         inputIndex--;
-
-        // let sliceIndex = Math.max(selectionArr.lastIndexOf(' ', i - 1), selectionArr.lastIndexOf('\n', i - 1));
-
-        // // if(sliceIndex === -1) {
-        // //   sliceIndex = 0;
-        // // }
-
-        // console.log('sliceIndex: ', sliceIndex);
-        // console.log('selectionArr.slice(sliceIndex + 1, i + 1)', selectionArr.slice(sliceIndex + 1, i));
-        // console.log('context.measureText(selectionArr.slice(sliceIndex + 1, i + 1).join()).width', context.measureText(selectionArr.slice(sliceIndex + 1, i).join('')).width);
-        // console.log('textareaWidth: ', textareaWidth);
-
-        // const stopChars = [' ', ')', ']', '}', '>', '-'];
-        // let stopIndex = selectionArr.length;
-
-        // for(let j = i + 1; j < selectionArr.length; j++) {
-        //   if(stopChars.includes(selectionArr[j])) {
-        //     stopIndex = j;
-        //   }
-        // }
-
-        // if(context.measureText(selectionArr.slice(sliceIndex + 1, i).join('') + selectionArr[i + 1]).width > textareaWidth) {
-        // // if(context.measureText(selectionArr.slice(sliceIndex + 1, i).join('')).width
-        // // + context.measureText(selectionArr.slice(i + 1, stopIndex + 1).join('')).width > textareaWidth) {
-        //   console.log('width: ', context.measureText(selectionArr.slice(sliceIndex + 1, i).join('') + selectionArr[i + 1]).width);
-        //   console.log(selectionArr[i + 1]);
-        //   console.log('over');
-
-        //   offset++;
-        // }
       }
       inputIndex++;
     }
-
-    // for(let i = 0; i < selectionArr.length; i++) {
-    //   let sliceIndex = selectionArr.lastIndexOf('\n', i) !== -1 ? selectionArr.lastIndexOf('\n', i) : 0;
-
-    //   console.log('sliceIndex: ',sliceIndex);
-
-    //   if(selectionArr[i] !== inputArr[j] && context.measureText(selectionArr.slice(sliceIndex, i + 2).join('')).width > textareaWidth) {
-    //     // console.log(selectionArr.lastIndexOf('\n', i));
-    //     // console.log(i, selectionArr[i]);
-    //     // console.log(j, inputArr[j]);
-
-    //     console.log('over');
-
-    //     offset++;
-    //     // j--;
-    //   }
-
-    //   j++;
-    // }
-
-    console.log('offset: ', offset);
-
-    // const newlinesCountOfSelection = selection?.toString().split('').filter(char => char === '\n').length;
 
     let setPoint = selection?.toString().split('').length;
 
@@ -359,48 +252,9 @@ const Editor = ({ input, setInput, editorFocus }: EditorProps) => {
 
     if(textareaRef.current && setPoint) {
       textareaRef.current.focus();
-      // position(textareaRef.current, setPoint);
       textareaRef.current!.setSelectionRange(setPoint - offset, setPoint - offset);
 
-      // setTimeout(() => {
-      //   const textUpToCaret = textareaRef.current!.value.substring(0, textareaRef.current!.selectionStart);
-      //   const rowNumber = (textUpToCaret.match(/\n/g) || []).length;
-      //   const end = textareaRef.current!.value.indexOf('\n', textareaRef.current!.selectionStart);
-      //   const highlightEnd = textareaRef.current!.value.substring(0, end === -1 ? textareaRef.current!.value.length : end);
-      //   const linesPerRow = textSplitIntoRow(highlightEnd.split('\n'))[0];
-
-      //   let activeRow = 0;
-      //   // let offset = 0;
-
-      //   for(let i = 0; i < linesPerRow.length - 1; i++) {
-      //     const currentLines = linesPerRow[i] === 0 ? 1 : linesPerRow[i];
-
-      //     activeRow += currentLines;
-      //   }
-
-      //   const activeRowsArr = [activeRow];
-
-      //   for(let i = 1; i < linesPerRow[rowNumber]; i++) {
-      //     activeRowsArr.push(activeRow + i);
-      //   }
-
-      //   console.log('lineNumbers: ', lineNumbers);
-      //   for(let i = 0; i < lineNumbers.length; i++) {
-      //     if(activeRowsArr.includes(i) && lineNumbers[i] && newlinesCountOfSelection) {
-      //       console.log('lineNumbers[i]: ', lineNumbers[i]);
-      //       console.log(newlinesCountOfSelection);
-      //       offset = newlinesCountOfSelection - (lineNumbers[i] - 1);
-
-      //       break;
-      //     }
-      //   }
-
-      //   // console.log('offset: ', offset);
-      //   console.log('setPoint - offset: ', setPoint - offset);
-      //   textareaRef.current!.setSelectionRange(setPoint - offset, setPoint - offset);
-
-      //   handleCaret(textareaRef.current!);
-      // }, 0);
+      textRef.current!.scrollTop = scrollOffset!;
 
       handleCaret(textareaRef.current!);
     }
@@ -433,6 +287,9 @@ const Editor = ({ input, setInput, editorFocus }: EditorProps) => {
           const scrollTop = textNode.scrollTop;
 
           lineNumbersNode.scrollTop = scrollTop;
+
+          const rect = caretRef.current!.getBoundingClientRect();
+          console.log(`Top: ${rect.top}, Bottom: ${rect.bottom}, Height: ${rect.height}`);
       };
 
       textNode.addEventListener('scroll', syncScroll);
@@ -523,11 +380,6 @@ const Editor = ({ input, setInput, editorFocus }: EditorProps) => {
           }}
           onKeyDown={handleKeyDown}
           onPaste={(e) => {handleCaret(e.currentTarget)}}
-          // onBlur={(e) => {
-          //   if(editorFocus) {
-          //     e.currentTarget.focus();
-          //   }
-          // }}
           onClick={(e) => {
             console.log('textarea clicked');
             console.log(e.clientX);
