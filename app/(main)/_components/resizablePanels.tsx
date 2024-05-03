@@ -1,15 +1,19 @@
-"use client";
-
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 
 import Editor from "@/components/editor";
 import Document from "@/components/document";
 
-const ResizablePanels = () => {
+type ResizablePanelsProps = {
+  sidebarCollapse: boolean;
+}
+
+const ResizablePanels = ({ sidebarCollapse }: ResizablePanelsProps) => {
   const [input, setInput] = useState('');
   const [leftWidth, setLeftWidth] = useState(50);
   const [editorFocus, setEditorFocus] = useState(true);
+  // const [isLargeScreen, setIsLargeScreen] = useState(typeof window !== 'undefined' && window.innerWidth > 768);
+  const [isLargeScreen, setIsLargeScreen] = useState<boolean | null>(null);
 
   const editorContainerRef = useRef<HTMLDivElement>(null);
 
@@ -37,38 +41,71 @@ const ResizablePanels = () => {
     mouseDownEvent.preventDefault();
   }
 
-  const handleClickOutside = (target: EventTarget) => {
-    if(editorContainerRef.current && target instanceof Node && editorContainerRef.current.contains(target)) {
-      console.log('focus');
-      setEditorFocus(true);
-    } else {
-      console.log('blur');
-      setEditorFocus(false);
-    }
-  }
+  // const handleClickOutside = (target: EventTarget) => {
+  //   if(editorContainerRef.current && target instanceof Node && editorContainerRef.current.contains(target)) {
+  //     console.log('focus');
+  //     setEditorFocus(true);
+  //   } else {
+  //     console.log('blur');
+  //     setEditorFocus(false);
+  //   }
+  // }
 
-  return ( 
-    <div
-      className="flex items-center h-screen p-4 gap-2"
-      onClick={e => handleClickOutside(e.target)}
-    >
+  useEffect(() => {
+    window.addEventListener('click', (e) => {
+      setEditorFocus(false);
+    });
+
+    return () => window.removeEventListener('click', (e) => {
+      setEditorFocus(false);
+    });
+  }, [])
+
+  useEffect(() => {
+    // Set initial state based on the client's window size
+    setIsLargeScreen(window.innerWidth > 768);
+
+    const handleResize = () => {
+      setIsLargeScreen(window.innerWidth > 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Optionally render nothing or a placeholder until we know the client width
+  if (isLargeScreen === null) return null; // or a loading spinner, etc.
+
+  return (
+    <div className="pt-10">
       <div
-        className={cn(`flex h-full rounded-lg bg-slate-400 border-2 border-slate-400 p-5 relative`,editorFocus && `border-blue-400 shadow-xl shadow-black/60`)}
-        style={{ width: `calc(${leftWidth}% - 10.5px)` }}
-        // tabIndex={0}
-        // onClick={() => setEditorBorder(true)}
-        ref={editorContainerRef}
-        // onFocus={(e) => {
-        //   e.preventDefault();
-        //   setEditorBorder(true);
-        // }}
-        // onBlur={() => setEditorBorder(false)}
+        className={`absolute w-full h-[calc(100%-72px)] flex flex-col md:flex-row items-center px-3 gap-2 transition-all duration-300 ${sidebarCollapse ? `left-0 lg:left-[130px] lg:w-[calc(100%-260px)]` : `left-0 lg:left-[260px] lg:w-[calc(100%-260px)]`}`} //md:left-[7%] md:w-[86%]
+        // onClick={e => handleClickOutside(e.target)}
       >
-        <Editor input={input} setInput={setInput} editorFocus={editorFocus} />
-      </div>
-      <div className="cursor-ew-resize bg-black w-[5px] h-1/6 rounded-xl" onMouseDown={startResizing}></div>
-      <div className="h-full overflow-auto bg-slate-400 rounded-lg flex flex-col" style={{ width: `calc(${100 - leftWidth}% - 10.5px)` }}>
-        <Document input={input} width={100 - leftWidth} />
+        <div className="absolute -top-[38px] left-16 lg:left-3 z-50">
+          <p className="text-xl">directory</p>
+        </div>
+        <div
+          suppressHydrationWarning
+          className={cn(`flex flex-1 md:flex-initial overflow-y-auto h-full rounded-lg bg-slate-400 border-2 border-slate-400 mt-2 p-5 relative`,editorFocus && `border-blue-400 shadow-lg shadow-black/60`)}
+          style={{ width: isLargeScreen ? `calc(${leftWidth}% - 10.5px)` : `100%` }}
+          ref={editorContainerRef}
+          onClick={e => {
+            console.log(e.target);
+            e.stopPropagation();
+            setEditorFocus(true);
+          }}
+        >
+          <Editor input={input} setInput={setInput} editorFocus={editorFocus} />
+        </div>
+        <div className="md:cursor-ew-resize bg-black w-1/6 md:w-[5px] h-[5px] md:h-1/6 mt-2 rounded-xl" onMouseDown={startResizing}></div>
+        <div
+          suppressHydrationWarning
+          className="h-full mt-2 overflow-auto bg-slate-400 rounded-lg flex flex-1 md:flex-initial flex-col"
+          style={{ width: isLargeScreen ? `calc(${100 - leftWidth}% - 10.5px)` : `100%` }}
+        >
+          <Document input={input} width={isLargeScreen ? 100 - leftWidth : 100} />
+        </div>
       </div>
     </div>
    );

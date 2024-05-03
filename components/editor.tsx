@@ -63,18 +63,20 @@ const Editor = ({ input, setInput, editorFocus }: EditorProps) => {
         }
 
 
-        if(words.length === 1 && context.measureText(words[0]).width > textareaWidth) {
-          let index = 1;
+        for(let i = 0; i < words.length; i++) {
+          if(context.measureText(words[i]).width > textareaWidth) {
+            let index = 1;
 
-          while(index <= words[0].length && context.measureText(words[0].substring(0, index)).width < textareaWidth) {
-            index++;
+            while(index <= words[i].length && context.measureText(words[i].substring(0, index)).width < textareaWidth) {
+              index++;
+            }
+
+            // console.log('words[0]: ', words[i]);
+            const part1 = words[i].substring(0, index - 1);
+            const part2 = words[i].substring(index - 1);
+
+            words.splice(i, 1, part1, part2);
           }
-
-          console.log('words[0]: ', words[0]);
-          const part1 = words[0].substring(0, index - 1);
-          const part2 = words[0].substring(index - 1);
-
-          words = [part1, part2];
         }
 
         for(let i = 0; i < words.length; i++) {
