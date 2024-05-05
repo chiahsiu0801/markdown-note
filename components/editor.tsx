@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react"
 import { Caret } from 'textarea-caret-ts'
-import { cn } from "@/lib/utils"
+import { cn, measureTextWidth } from "@/lib/utils"
 
 import EditorLine from "./editorLine"
 
@@ -28,14 +28,15 @@ const Editor = ({ input, setInput, editorFocus }: EditorProps) => {
     const textareaStyles = window.getComputedStyle(textareaRef.current!);
 
     const font = `${textareaStyles.fontSize} ${textareaStyles.fontFamily}`;
-    const canvas = document.createElement('canvas');
-    const context = canvas.getContext('2d')!;
+    // const canvas = document.createElement('canvas');
+    // const context = canvas.getContext('2d')!;
 
-    if(context) {
-      context.font = font;
-    }
+    // if(context) {
+    //   context.font = font;
+    // }
 
-    const spaceWidth = context?.measureText(' ').width;
+    // const spaceWidth = context?.measureText(' ').width;
+    const spaceWidth = measureTextWidth(font, ' ');
 
     value.map((row: string) => {
       let count = 0;
@@ -64,10 +65,12 @@ const Editor = ({ input, setInput, editorFocus }: EditorProps) => {
 
 
         for(let i = 0; i < words.length; i++) {
-          if(context.measureText(words[i]).width > textareaWidth) {
+          // if(context.measureText(words[i]).width > textareaWidth) {
+          if(measureTextWidth(font, words[i]) > textareaWidth) {
             let index = 1;
 
-            while(index <= words[i].length && context.measureText(words[i].substring(0, index)).width < textareaWidth) {
+            // while(index <= words[i].length && context.measureText(words[i].substring(0, index)).width < textareaWidth) {
+            while(index <= words[i].length && measureTextWidth(font, words[i].substring(0, index)) < textareaWidth) {
               index++;
             }
 
@@ -85,13 +88,15 @@ const Editor = ({ input, setInput, editorFocus }: EditorProps) => {
             words[i] = '    ' + words[i].slice(1);
           }
 
-          let wordWidth = context.measureText(words[i]).width!;
+          // let wordWidth = context.measureText(words[i]).width!;
+          let wordWidth = measureTextWidth(font, words[i]);
 
           if(words[i][words[i].length - 1] === ' ') {
             wordWidth -= spaceWidth;
           }
 
-          const lineWidth = context.measureText(currentLine).width!;
+          // const lineWidth = context.measureText(currentLine).width!;
+          const lineWidth = measureTextWidth(font, currentLine);
 
           // console.log('words[i]: ', words[i]);
           // console.log('wordWidth: ', wordWidth);
@@ -228,14 +233,14 @@ const Editor = ({ input, setInput, editorFocus }: EditorProps) => {
     const selectionArr = selection!.toString().split('');
     let offset = 0;
 
-    const textareaStyles = window.getComputedStyle(textareaRef.current!);
-    const font = `${textareaStyles.fontSize} ${textareaStyles.fontFamily}`;
-    const canvas = document.createElement('canvas');
-    const context = canvas.getContext('2d')!;
+    // const textareaStyles = window.getComputedStyle(textareaRef.current!);
+    // const font = `${textareaStyles.fontSize} ${textareaStyles.fontFamily}`;
+    // const canvas = document.createElement('canvas');
+    // const context = canvas.getContext('2d')!;
 
-    if(context) {
-      context.font = font;
-    }
+    // if(context) {
+    //   context.font = font;
+    // }
 
     let inputIndex = 0;
 
