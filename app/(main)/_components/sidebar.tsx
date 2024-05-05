@@ -1,6 +1,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button";
-import { ChevronsLeft, MenuIcon } from "lucide-react";
+import { ChevronsLeft, MenuIcon, Plus } from "lucide-react";
+import Item from "./item";
 
 type SidebarProps = {
   sidebarCollapse: boolean;
@@ -15,15 +16,19 @@ const Sidebar = ({ sidebarCollapse, setSidebarCollapse }: SidebarProps) => {
       //   transform: sidebarCollapse ? 'translate(calc(-177px), 0)' : 'translate(0, 0)',
       // }}
     >
-      <div className="w-3/4 flex flex-col ">
-        <div className="flex items-center">
+      <div className="w-3/4 flex flex-col">
+        <div className="mb-2 flex justify-center items-center">
           <Avatar>
             <AvatarImage src="https://cdn-icons-png.flaticon.com/512/1534/1534039.png" />
             <AvatarFallback>CN</AvatarFallback>
           </Avatar>
           <p className="mx-2 text-center text-sm">ChisHsiu Chang</p>
         </div>
-        Sidebar
+        <Item
+          onClick={() => {}}
+          label="New page"
+          icon={Plus}
+        />
       </div>
       <div className={`w-1/4 absolute -top-1 lg:right-1 ${sidebarCollapse ? `-right-3` : `left-[calc(100%-50px)]`}`} onClick={() => setSidebarCollapse((prevState) => !prevState)}>
         <Button variant="ghost" size="icon">

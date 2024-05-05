@@ -334,7 +334,7 @@ const Editor = ({ input, setInput, editorFocus }: EditorProps) => {
     <>
       <div
         ref={lineNumbersRef}
-        className="w-12 pr-3 text-right text-lg font-mono rounded-lg rounded-r-none bg-slate-400 text-gray-600 border-gray-300 overflow-hidden resize-none select-none focus:outline-none cursor-default leading-6"
+        className="w-12 pr-3 text-right text-lg font-mono rounded-lg rounded-r-none bg-slate-400 text-gray-600 border-gray-300 overflow-hidden resize-none select-none focus:outline-none leading-6"
         style={{ userSelect: 'none' }}
       >
         {

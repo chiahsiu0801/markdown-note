@@ -12,7 +12,6 @@ const ResizablePanels = ({ sidebarCollapse }: ResizablePanelsProps) => {
   const [input, setInput] = useState('');
   const [leftWidth, setLeftWidth] = useState(50);
   const [editorFocus, setEditorFocus] = useState(true);
-  // const [isLargeScreen, setIsLargeScreen] = useState(typeof window !== 'undefined' && window.innerWidth > 768);
   const [isLargeScreen, setIsLargeScreen] = useState<boolean | null>(null);
 
   const editorContainerRef = useRef<HTMLDivElement>(null);
@@ -40,16 +39,6 @@ const ResizablePanels = ({ sidebarCollapse }: ResizablePanelsProps) => {
     
     mouseDownEvent.preventDefault();
   }
-
-  // const handleClickOutside = (target: EventTarget) => {
-  //   if(editorContainerRef.current && target instanceof Node && editorContainerRef.current.contains(target)) {
-  //     console.log('focus');
-  //     setEditorFocus(true);
-  //   } else {
-  //     console.log('blur');
-  //     setEditorFocus(false);
-  //   }
-  // }
 
   useEffect(() => {
     window.addEventListener('click', (e) => {
@@ -79,15 +68,14 @@ const ResizablePanels = ({ sidebarCollapse }: ResizablePanelsProps) => {
   return (
     <div className="pt-10">
       <div
-        className={`absolute w-full h-[calc(100%-72px)] flex flex-col md:flex-row items-center px-3 gap-2 transition-all duration-300 ${sidebarCollapse ? `left-0 lg:left-[130px] lg:w-[calc(100%-260px)]` : `left-0 lg:left-[260px] lg:w-[calc(100%-260px)]`}`} //md:left-[7%] md:w-[86%]
-        // onClick={e => handleClickOutside(e.target)}
+        className={`absolute left-0 w-full lg:w-[calc(100%-260px)] h-[calc(100%-72px)] flex flex-col md:flex-row items-center px-3 gap-2 transition-all duration-300 ${sidebarCollapse ? `lg:left-[130px]` : `lg:left-[260px]`}`}
       >
         <div className="absolute -top-[38px] left-16 lg:left-3 z-50">
           <p className="text-xl">directory</p>
         </div>
         <div
           suppressHydrationWarning
-          className={cn(`flex flex-1 md:flex-initial overflow-y-auto h-full rounded-lg bg-slate-400 border-2 border-slate-400 mt-2 p-5 relative`,editorFocus && `border-blue-400 shadow-lg shadow-black/60`)}
+          className={cn(`flex flex-1 md:flex-initial overflow-y-auto h-full rounded-lg bg-slate-400 border-2 border-slate-400 mt-2 p-5 relative cursor-pointer`,editorFocus && `border-blue-400 shadow-lg shadow-black/60`)}
           style={{ width: isLargeScreen ? `calc(${leftWidth}% - 10.5px)` : `100%` }}
           ref={editorContainerRef}
           onClick={e => {
