@@ -2,6 +2,7 @@
 
 import Sidebar from '../_components/sidebar';
 import ResizablePanels from "../_components/resizablePanels";
+import StoreProvider from '@/app/StoreProvider';
 
 import { useState } from 'react';
 
@@ -11,7 +12,9 @@ const NotePage = () => {
   return (
     <div className="w-full h-screen py-4 relative">
       <Sidebar sidebarCollapse={sidebarCollapse} setSidebarCollapse={setSidebarCollapse} />
-      <ResizablePanels sidebarCollapse={sidebarCollapse} />
+      <StoreProvider>
+        <ResizablePanels sidebarCollapse={sidebarCollapse} />
+      </StoreProvider>
     </div>
    );
 }
