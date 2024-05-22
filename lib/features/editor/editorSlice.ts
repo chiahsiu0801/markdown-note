@@ -10,7 +10,7 @@ interface EditorState {
   // activeRows: number[];
 }
 
-interface AddPayload {
+interface IncreasePayload {
   changedSection: string;
   changedRows: string[];
   activeRow: number;
@@ -18,6 +18,20 @@ interface AddPayload {
   rowCountBeforeChange: number;
   textareaWidth: number;
   changedRowsCount: number[];
+}
+
+interface DecreasePayload {
+  changedRows: string[];
+  activeRow: number;
+  lineNumbersOffset: number;
+  rowCountBeforeChange: number;
+  changedRowsCount: number[];
+  deletedIsNewline: boolean;
+}
+
+interface ResetPayload {
+  newLineNumbers: (number | string)[];
+  newRows: string[];
 }
 
 const initialState: EditorState = {
@@ -32,7 +46,7 @@ const editorSlice = createSlice({
   name: 'editor',
   initialState,
   reducers: {
-    increase: (state, action: PayloadAction<AddPayload>) => {
+    increase: (state, action: PayloadAction<IncreasePayload>) => {
       const { 
         changedSection,
         changedRows,
@@ -104,9 +118,73 @@ const editorSlice = createSlice({
       state.lineNumbers = [...state.lineNumbers.slice(0, activeRow), ...changedRowsLineNumber, ...state.lineNumbers.slice(activeRow + rowCountBeforeChange)];
 
       return;
+    },
+    decrease: (state, action: PayloadAction<DecreasePayload>) => {
+      const {
+        changedRows,
+        activeRow,
+        lineNumbersOffset,
+        rowCountBeforeChange,
+        changedRowsCount,
+        deletedIsNewline,
+      } = action.payload;
+
+      console.log('changedRows: ', changedRows);
+      console.log('changedRowsCount: ', changedRowsCount);
+      console.log('rowCountBeforeChange: ', rowCountBeforeChange);
+
+      const suffixPrevLineNumbers = state.lineNumbers.slice(0, activeRow);
+
+      let changedRowsLineNumberStart = 0;
+      let previousRowCount = 0;
+
+      for(let i = suffixPrevLineNumbers.length - 1; i >= 0; i--) {
+        previousRowCount++;
+
+        if(suffixPrevLineNumbers[i] !== '') {
+          changedRowsLineNumberStart = suffixPrevLineNumbers[i] as number;
+
+          break;
+        }
+      }
+
+      console.log('changedRowsLineNumberStart: ', changedRowsLineNumberStart);
+      console.log('previousRowCount: ', previousRowCount);
+
+      let changedRowsLineNumber: (number | string)[] = [changedRowsLineNumberStart! + 1];
+
+      if(changedRowsCount.length === 1 && changedRowsCount[0] !== 0) {
+        Array(changedRowsCount[0] - 1).fill('').forEach((_) => changedRowsLineNumber.push(''));
+      }
+
+      if(deletedIsNewline) {
+        console.log('state.lineNumbers.slice(0, activeRow): ', state.lineNumbers.slice(0, activeRow));
+        console.log('changedRowsLineNumber: ', changedRowsLineNumber);
+        console.log('offsetLineNumbers(state.lineNumbers.slice(activeRow + rowCountBeforeChange), -1): ', offsetLineNumbers(state.lineNumbers.slice(activeRow + rowCountBeforeChange), -1));
+        state.rows = [...state.rows.slice(0, activeRow), ...changedRows, ...state.rows.slice(activeRow + rowCountBeforeChange)];
+        // state.rows = [...state.rows.slice(0, activeRow), ...changedRows, ...state.rows.slice(activeRow + rowCountBeforeChange)];
+        // state.lineNumbers = [...state.lineNumbers.slice(0, activeRow), ...offsetLineNumbers(state.lineNumbers.slice(activeRow + 1), -(rowCountBeforeChange - 1))];
+        state.lineNumbers = [...state.lineNumbers.slice(0, activeRow), ...changedRowsLineNumber, ...offsetLineNumbers(state.lineNumbers.slice(activeRow + rowCountBeforeChange), -(lineNumbersOffset - 1))];
+        return;
+      }
+
+      console.log('state.rows.slice(0, activeRow): ', state.rows.slice(0, activeRow));
+      console.log('changedRows: ', changedRows);
+      console.log('state.rows.slice(activeRow + rowCountBeforeChange): ', state.rows.slice(activeRow + rowCountBeforeChange));
+
+      state.rows = [...state.rows.slice(0, activeRow), ...changedRows, ...state.rows.slice(activeRow + rowCountBeforeChange)];
+      // state.rows = [...state.rows.slice(0, activeRow), ...changedRows, ...state.rows.slice(activeRow + changedRows.length)];
+      state.lineNumbers = [...state.lineNumbers.slice(0, activeRow), ...changedRowsLineNumber, ...offsetLineNumbers(state.lineNumbers.slice(activeRow + rowCountBeforeChange), -(lineNumbersOffset - 1))];
+      return;
+    },
+    reset: (state, action: PayloadAction<ResetPayload>) => {
+      const { newLineNumbers, newRows } = action.payload;
+
+      state.lineNumbers = newLineNumbers;
+      state.rows = newRows;
     }
   }
 });
 
-export const { increase } = editorSlice.actions;
+export const { increase, decrease, reset } = editorSlice.actions;
 export default editorSlice.reducer;

@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState, useCallback } from "react"
+import { useEffect, useRef, useState, useCallback, useMemo } from "react"
 import { Caret } from 'textarea-caret-ts'
-import { cn, textSplitIntoRow } from "@/lib/utils"
+import { cn, textSplitIntoRow, transferLineCountsToLineNumbers } from "@/lib/utils"
 import { useAppDispatch, useAppSelector } from "@/lib/hooks"
 import { RootState, AppDispatch } from "@/lib/store"
-import { increase } from '../lib/features/editor/editorSlice';
+import { increase, decrease, reset } from '../lib/features/editor/editorSlice';
 
 import EditorLine from "./editorLine"
 
@@ -22,16 +22,20 @@ const Editor = ({ input, setInput, editorFocus }: EditorProps) => {
 
   const lineNumbersRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const textareaForDeleteRef = useRef<HTMLTextAreaElement>(null);
   const textRef = useRef<HTMLDivElement>(null);
   const caretRef = useRef<HTMLDivElement>(null);
+  const caretForDeleteRef = useRef<HTMLDivElement>(null);
   const previousInputRef = useRef<string>(input);
   const previousCaretTop = useRef<number>(3);
   const previousCaretPos = useRef<number>(0);
+  const previousCaretPosForDeleteRef = useRef<number | null>(null);
   const previousPressedKey = useRef<string>('');
   const pastedRef = useRef<boolean>(false);
   const whiteSpaceCreateNewlineRef = useRef<boolean>(false);
 
   const handleActiveRows = useCallback((target: HTMLTextAreaElement) => {
+    console.log('lineNumbers: ', lineNumbers);
     const activeLineNumber = parseInt(target.style.top) / 28;
     // const activeLineNumber = (parseInt(target.style.top) - 1) / 28;
     console.log('activeLineNumber: ', activeLineNumber);
@@ -48,9 +52,11 @@ const Editor = ({ input, setInput, editorFocus }: EditorProps) => {
     }
 
     console.log('forwardIndex: ', forwardIndex);
-    console.log('afterwardIndex: ', afterwardIndex);;
+    console.log('afterwardIndex: ', afterwardIndex);
 
-    setActiveRows(Array.from({ length: (afterwardIndex - forwardIndex) }, (_, i) => i + forwardIndex));
+    const newActiveRows = Array.from({ length: (afterwardIndex - forwardIndex) }, (_, i) => i + forwardIndex);
+    // setActiveRows(Array.from({ length: (afterwardIndex - forwardIndex) }, (_, i) => i + forwardIndex));
+    setActiveRows(newActiveRows);
   }, [lineNumbers]);
 
   const handleCaret = useCallback((target: HTMLTextAreaElement): void => {
@@ -97,6 +103,33 @@ const Editor = ({ input, setInput, editorFocus }: EditorProps) => {
     }, 0);
   }, [handleActiveRows, textareaWidth]);
 
+  const handleCaretForDelete = (target: HTMLTextAreaElement): void => {
+    setTimeout(() => {
+      const pos = Caret.getRelativePosition(target);
+      console.log('pos: ', pos);
+      console.log('textareaForDeleteRef.current!.scrollTop: ', textareaForDeleteRef.current!.scrollTop);
+      // console.log('caretRef.current!.style.top: ', caretRef.current!.style.top);
+
+      textareaForDeleteRef.current!.scrollTop = textRef.current!.scrollTop;
+
+      caretForDeleteRef.current!.style.top = pos.top + 20 - textareaForDeleteRef.current!.scrollTop + 'px';
+      caretForDeleteRef.current!.style.left = pos.left + 68 + 'px';
+    }, 0);
+    // const textRect = textRef.current!.getBoundingClientRect();
+    // const caretRect = caretRef.current!.getBoundingClientRect();
+
+    // // If caret is four lines below the top of editor, scroll editor and line numbers to make more lines visible
+    // const caretOutOfTop = caretRect.top - (28 * 4) < textRect.top;
+    // // const caretOutOfTop = caretRect.top < textRect.top;
+    // const caretOutOfBottom = caretRect.bottom > textRect.bottom;
+
+    // if(caretOutOfTop) {
+    //   textRef.current!.scrollTop = pos.top - (28 * 4);
+    // } else if(caretOutOfBottom) {
+    //   textRef.current!.scrollTop = pos.top + 28 - textRect.height;
+    // }
+  }
+
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>): void => {
     const target = e.target as HTMLTextAreaElement;
 
@@ -120,6 +153,24 @@ const Editor = ({ input, setInput, editorFocus }: EditorProps) => {
         }, 0);
 
         break;
+      case 'Backspace':
+        document.getElementById('rowsContainer')!.style.color = 'transparent';
+        document.getElementById('rowsContainer')!.style.visibility = 'hidden';
+        textareaForDeleteRef.current!.style.visibility = 'visible';
+        textareaForDeleteRef.current!.scrollTop = textRef.current!.scrollTop;
+        console.log('textRef.current!.scrollTop: ', textRef.current!.scrollTop);
+        caretRef.current!.style.visibility = 'hidden';
+        caretForDeleteRef.current!.style.visibility = 'visible';
+
+        if(previousCaretPosForDeleteRef.current === null) {
+          previousCaretPosForDeleteRef.current = previousCaretPos.current;
+          textareaForDeleteRef.current!.focus();
+          textareaForDeleteRef.current!.value = input;
+          console.log('previousCaretPos.current: ', previousCaretPos.current);
+          textareaForDeleteRef.current!.setSelectionRange(previousCaretPos.current, previousCaretPos.current);
+        }
+
+        break;
       default:
         console.log(e.key);
         handleCaret(target);
@@ -127,6 +178,31 @@ const Editor = ({ input, setInput, editorFocus }: EditorProps) => {
         break;
     }
   }, [input, setInput, handleCaret]);
+
+  const handleKeyUp = (e: React.KeyboardEvent<HTMLTextAreaElement>): void => {
+    if(e.key === 'Backspace') {
+      console.log('input: ', input);
+      console.log('oldText: ', previousInputRef.current);
+
+      handleTextChange(textareaForDeleteRef.current!.value);
+
+      previousCaretPos.current = textareaForDeleteRef.current!.selectionStart;
+      console.log('previousCaretPos.current in handleKeyUp: ', previousCaretPos.current);
+      console.log('textareaForDeleteRef.current!.value[previousCaretPos.current - 1]', textareaForDeleteRef.current!.value[previousCaretPos.current - 1]);
+      // handleCaret(textareaForDeleteRef.current!);
+      // handleActiveRows(textareaForDeleteRef.current!);
+
+      document.getElementById('rowsContainer')!.style.color = 'black';
+      document.getElementById('rowsContainer')!.style.visibility = 'visible';
+      textareaForDeleteRef.current!.blur();
+      textareaForDeleteRef.current!.style.visibility = 'hidden';
+      textareaRef.current!.focus();
+      textareaRef.current!.setSelectionRange(previousCaretPos.current, previousCaretPos.current);
+      previousCaretPosForDeleteRef.current = null;
+      caretForDeleteRef.current!.style.visibility = 'hidden';
+      caretRef.current!.style.visibility = 'visible';
+    }
+  }
 
   const handleCaretByClick = (e: React.MouseEvent<HTMLDivElement>) => {
     const scrollOffset = textRef.current?.scrollTop;
@@ -178,9 +254,10 @@ const Editor = ({ input, setInput, editorFocus }: EditorProps) => {
   // Function to detect changes between the previous and current input
   const findDifference = (oldText: string, newText: string) => {
     let prefixLastNewline = 0;
-    let prefixIndex = previousCaretPos.current - 1;
-    console.log('prefixIndex: ', prefixIndex);
+    // let prefixIndex = previousPressedKey.current === 'Backspace' ? previousCaretPos.current - 2 : previousCaretPos.current - 1;
+    let prefixIndex = previousPressedKey.current === 'Backspace' ? textareaForDeleteRef.current!.selectionStart - 1 : previousCaretPos.current - 1;
 
+    console.log('prefixIndex: ', prefixIndex);
 
     while(prefixIndex >= 0) {
       if(newText[prefixIndex] === '\n') {
@@ -193,8 +270,9 @@ const Editor = ({ input, setInput, editorFocus }: EditorProps) => {
     }
 
     let suffixFirstNewline = newText.length;
-    let suffixIndex = textareaRef.current?.selectionStart!;
-
+    // let suffixIndex = textareaRef.current?.selectionStart!;
+    let suffixIndex = previousPressedKey.current === 'Backspace' ? textareaForDeleteRef.current!.selectionStart : textareaRef.current?.selectionStart!;
+    console.log('suffixIndex: ', suffixIndex);
 
     while(suffixIndex <= newText.length - 1) {
       if(newText[suffixIndex] === '\n') {
@@ -206,6 +284,9 @@ const Editor = ({ input, setInput, editorFocus }: EditorProps) => {
       suffixIndex++;
     }
 
+    console.log('prefixLastNewline: ', prefixLastNewline);
+    console.log('suffixFirstNewline: ', suffixFirstNewline);
+
     // const prefix = newText.substring(0, prefixLastNewline);
     const changedSection = newText.substring(prefixLastNewline, suffixFirstNewline);
     // const suffix = newText.substring(suffixFirstNewline);
@@ -214,9 +295,7 @@ const Editor = ({ input, setInput, editorFocus }: EditorProps) => {
   };
 
   const processChanges = useCallback((oldText: string, newText: string) => {
-    console.log('called');
     let changedSection = findDifference(oldText, newText);
-    console.log('changedSection in processChanges: ', changedSection.split(''));
 
     // Add logic here to process only the changed section as needed
     let changedRows;
@@ -233,10 +312,36 @@ const Editor = ({ input, setInput, editorFocus }: EditorProps) => {
     let activeRow = (pos.top - 3) / 28;
     // let activeRow = (pos.top - 4) / 28;
 
-    if(activeRow !== activeRows[0] && !whiteSpaceCreateNewlineRef.current) {
-      console.log('set activeRow');
+    if(previousPressedKey.current === 'Backspace') {
+      console.log('Caret.getRelativePosition(textareaForDeleteRef.current!).top: ', Caret.getRelativePosition(textareaForDeleteRef.current!).top);
+      activeRow = (Caret.getRelativePosition(textareaForDeleteRef.current!).top - 3) / 28;
+      // activeRow = (Caret.getRelativePosition(textareaForDeleteRef.current!).top - 4) / 28;
+
+      while(lineNumbers[activeRow] === '') {
+        activeRow--;
+      }
+    }
+
+    // console.log('lineNumbers in processChanges: ', lineNumbers);
+    // console.log('activeRows in processChanges: ', activeRows);
+    // let activeRowTest = activeRow;
+
+    // console.log('activeRow after offset in processChanges before: ', activeRowTest);
+
+    // console.log('previousCaretTop.current in processChanges: ', previousCaretTop.current);
+    // console.log('caretRef.current!.style.top in processChanges: ', caretRef.current!.style.top);
+
+    // console.log('activeRow after offset in processChanges after: ', activeRowTest);
+    // console.log('activeRow original in processChanges before: ', activeRow);
+
+    // console.log('activeRows[0] in processChanges: ', activeRows[0]);
+    // console.log('previousActiveRowsHeadRef.current in processChanges', previousActiveRowsHeadRef.current);
+
+    if(activeRow !== activeRows[0] && !whiteSpaceCreateNewlineRef.current && previousPressedKey.current !== 'Backspace') {
       activeRow = activeRows[0];
     }
+
+    console.log('activeRow original in processChanges after: ', activeRow);
 
     if(whiteSpaceCreateNewlineRef.current) {
       console.log('reset whitespace');
@@ -251,12 +356,23 @@ const Editor = ({ input, setInput, editorFocus }: EditorProps) => {
     activeRow = Math.max(activeRow, 0);
 
     // Calculate how many lines the changedSection occupied before change
-    let prevPrefixIndex = previousCaretPos.current - 1;
+    let prefixStartIndex = previousCaretPos.current;
+    let suffixStartIndex = previousCaretPos.current;
+
+    if(previousPressedKey.current === 'Backspace') {
+      console.log('textareaForDeleteRef.current!.selectionStart', textareaForDeleteRef.current!.selectionStart);
+      console.log('prefixStartIndex: ', prefixStartIndex);
+      prefixStartIndex = textareaForDeleteRef.current!.selectionStart;
+      suffixStartIndex = previousCaretPosForDeleteRef.current! as number;
+    }
+
+    // let prevPrefixIndex = previousCaretPos.current - 1;
+    let prevPrefixIndex = prefixStartIndex - 1;
     let prevPrefixLastNewline = 0
 
     while(prevPrefixIndex >= 0) {
       if(oldText[prevPrefixIndex] === '\n') {
-        prevPrefixLastNewline = prevPrefixIndex;
+        prevPrefixLastNewline = previousPressedKey.current === 'Backspace' ? prevPrefixIndex + 1 : prevPrefixIndex;
 
         break;
       }
@@ -264,8 +380,9 @@ const Editor = ({ input, setInput, editorFocus }: EditorProps) => {
       prevPrefixIndex--;
     }
 
+    // let prevSuffixIndex = previousCaretPos.current;
+    let prevSuffixIndex = suffixStartIndex;
     let prevSuffixFirstNewline = oldText.length;
-    let prevSuffixIndex = previousCaretPos.current;
 
     while(prevSuffixIndex <= oldText.length - 1) {
       if(oldText[prevSuffixIndex] === '\n') {
@@ -277,38 +394,92 @@ const Editor = ({ input, setInput, editorFocus }: EditorProps) => {
       prevSuffixIndex++;
     }
 
-    let rowCountBeforeChange =
-      textSplitIntoRow(oldText.substring(prevPrefixLastNewline, prevSuffixFirstNewline).split('\n'), textareaWidth)[0].
-      reduce((sum, num) => sum + num);
+    // if(previousPressedKey.current === 'Backspace') {
+    //   if(prevPrefixLastNewline !== 0) {
+    //     prevPrefixLastNewline++;
+    //   }
+    // }
+
+    console.log('previousCaretPos.current: ', previousCaretPos.current);
+    console.log('previousCaretPosForDeleteRef.current: ', previousCaretPosForDeleteRef.current);
+    console.log('prevPrefixLastNewline: ', prevPrefixLastNewline);
+    console.log('prevSuffixFirstNewline: ', prevSuffixFirstNewline);
+
+    console.log(`textSplitIntoRow(oldText.substring(prevPrefixLastNewline, prevSuffixFirstNewline).split('\n'), textareaWidth)[0]: `, textSplitIntoRow(oldText.substring(prevPrefixLastNewline, prevSuffixFirstNewline).split('\n'), textareaWidth)[0]);
+    console.log(`textSplitIntoRow(oldText.substring(prevPrefixLastNewline, prevSuffixFirstNewline).split('\n'), textareaWidth)[1]: `, textSplitIntoRow(oldText.substring(prevPrefixLastNewline, prevSuffixFirstNewline).split('\n'), textareaWidth)[1]);
+
+    const [splitedBeforeChangeLineCounts, splitedBeforeChangeLines] = textSplitIntoRow(oldText.substring(prevPrefixLastNewline, prevSuffixFirstNewline).split('\n'), textareaWidth);
+
+    // let rowCountBeforeChange =
+    //   textSplitIntoRow(oldText.substring(prevPrefixLastNewline, prevSuffixFirstNewline).split('\n'), textareaWidth)[0].
+    //   reduce((sum, num) => sum + num);
+
+    let rowCountBeforeChange = splitedBeforeChangeLineCounts.reduce((sum, num) => sum + num);
 
     rowCountBeforeChange = Math.max(rowCountBeforeChange, 1);
 
     const indexOfNewline = changedSection.indexOf('\n');
 
-    dispatch(increase({
-      changedSection,
-      changedRows,
-      activeRow,
-      indexOfNewline,
-      rowCountBeforeChange,
-      textareaWidth,
-      changedRowsCount,
-    }));
-  }, [dispatch, activeRows, textareaWidth]);
+    console.log('oldText: ', oldText);
+    console.log('newText: ', newText);
+    console.log('changedSection: ', changedSection.split(''));
+    console.log('activeRow: ', activeRow);
+    console.log('rowCountBeforeChange: ', splitedBeforeChangeLines.length);
+    console.log('isNewline: ', oldText[previousCaretPosForDeleteRef.current! - 1] === '\n');
+
+    if(previousPressedKey.current === 'Backspace') {
+      dispatch(decrease({
+        changedRows,
+        activeRow,
+        lineNumbersOffset: splitedBeforeChangeLineCounts.length,
+        rowCountBeforeChange: splitedBeforeChangeLines.length,
+        changedRowsCount,
+        deletedIsNewline: oldText[previousCaretPosForDeleteRef.current! - 1] === '\n',
+      }));
+    } else {
+      dispatch(increase({
+        changedSection,
+        changedRows,
+        activeRow,
+        indexOfNewline,
+        rowCountBeforeChange,
+        textareaWidth,
+        changedRowsCount,
+      }));
+    }
+  }, [dispatch, lineNumbers, textareaWidth, activeRows]);
 
   const handleTextChange = useCallback((inputValue: string) => {
-    setInput(inputValue);
-
     const previousInput = previousInputRef.current;
     processChanges(previousInput, inputValue);
     previousInputRef.current = inputValue; // Update previous input for the next change
-  }, [processChanges, setInput]);
+  }, [processChanges]);
+
+  const recalculateRowsAndLineNumbers = useCallback(() => {
+    const text = previousInputRef.current;
+    let [newLineNumberCounts, newRows] = textSplitIntoRow(text.split('\n'), textareaWidth);
+
+    console.log('newLineNumberCounts: ', newLineNumberCounts);
+    console.log('newRows: ', newRows);
+
+    if(newLineNumberCounts.length === 1 && newLineNumberCounts[0] === 0) {
+      newLineNumberCounts = [1];
+    }
+
+    dispatch(reset({
+      newLineNumbers: transferLineCountsToLineNumbers(newLineNumberCounts, 1),
+      newRows,
+    }));
+  }, [textareaWidth, dispatch]);
 
   useEffect(() => {
     const resizeObserver = new ResizeObserver(() => {
       if(textareaRef.current) {
         handleCaret(textareaRef.current);
         setTextareaWidth(textareaRef.current.getBoundingClientRect().width);
+        // if(previousInputRef.current) {
+        //   handleTextChange(previousInputRef.current);
+        // }
       }
     });
 
@@ -317,11 +488,13 @@ const Editor = ({ input, setInput, editorFocus }: EditorProps) => {
     return () => resizeObserver.disconnect();
   }, [handleCaret]);
 
+  useEffect(() => {
+      recalculateRowsAndLineNumbers();
+  }, [textareaWidth, recalculateRowsAndLineNumbers]);
+
   // Make lineNumbers is scrolled synchronously with textarea
   useEffect(() => {
-    // const textareaNode = textareaRef.current;
     const lineNumbersNode = lineNumbersRef.current;
-    // const highlightNode = textRef.current;
     const textNode = textRef.current;
 
     if(lineNumbersNode && textNode) {
@@ -329,9 +502,6 @@ const Editor = ({ input, setInput, editorFocus }: EditorProps) => {
           const scrollTop = textNode.scrollTop;
 
           lineNumbersNode.scrollTop = scrollTop;
-
-          const rect = caretRef.current!.getBoundingClientRect();
-          console.log(`Top: ${rect.top}, Bottom: ${rect.bottom}, Height: ${rect.height}`);
       };
 
       textNode.addEventListener('scroll', syncScroll);
@@ -351,6 +521,10 @@ const Editor = ({ input, setInput, editorFocus }: EditorProps) => {
   return (
     <>
       <div
+        className="w-[2px] h-6 bg-blue-500 absolute top-[23px] left-[68px] animate-blink z-50 invisible"
+        ref={caretForDeleteRef}
+      />
+      <div
         ref={lineNumbersRef}
         className="w-12 pr-3 text-right text-lg font-mono rounded-lg rounded-r-none bg-slate-400 text-gray-600 border-gray-300 overflow-hidden resize-none select-none focus:outline-none leading-6"
         style={{ userSelect: 'none' }}
@@ -364,6 +538,19 @@ const Editor = ({ input, setInput, editorFocus }: EditorProps) => {
           })
         }
       </div>
+      <textarea
+        ref={textareaForDeleteRef}
+        onChange={(e) => {
+          setInput(e.target.value);
+          handleCaretForDelete(e.target);
+        }}
+        onKeyUp={handleKeyUp}
+        style={{ width: 'calc(100% - 88px)', height: 'calc(100% - 40px)', left: '68px' }}
+        autoComplete="off"
+        autoCapitalize="off"
+        spellCheck="false"
+        className="text-lg font-mono absolute z-20 invisible resize-none focus:outline-none bg-transparent caret-transparent overflow-hidden"
+      />
       <div
         className="h-full text-lg bg-slate-400 absolute font-mono z-10 overflow-auto"
         ref={textRef}
@@ -399,12 +586,16 @@ const Editor = ({ input, setInput, editorFocus }: EditorProps) => {
           value={input}
           autoFocus
           onChange={(e) => {
-            // setInput(e.target.value);
             console.log('onChanged called');
-            handleTextChange(e.target.value);
+            setInput(e.target.value);
+
+            if(previousPressedKey.current !== 'Backspace') {
+              handleTextChange(e.target.value);
+            }
             previousCaretPos.current = e.target.selectionStart;
           }}
           onKeyDown={handleKeyDown}
+          // onKeyUp={handleKeyUp}
           onPaste={(e) => {
             pastedRef.current = true;
             handleCaret(e.currentTarget)
