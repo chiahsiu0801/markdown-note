@@ -1,28 +1,36 @@
-import { Types } from "mongoose";
-import { Document, User } from "./models";
-import { connectToDb } from "./utils"
+"use server";
 
-export const getDocuments = async () => {
+import { Types } from "mongoose";
+import { Note, User } from "./models";
+import { connectToDb } from "./utilsDb"
+import { revalidatePath } from "next/cache";
+import { NoteDocument } from "./models";
+
+export const getNotes = async () => {
   try {
     connectToDb();
-    const documents = await Document.find();
+    const notes: NoteDocument[] = await Note.find().lean();
 
-    return documents;
+    return notes.map(note => ({
+      ...note,
+      _id: note._id.toString(),
+    }));
+
   } catch (error) {
     console.log(error);
-    throw new Error('Failed to fetch documents!');
+    throw new Error('Failed to fetch notes!');
   }
 };
 
-export const getDocument = async (slug: string) => {
+export const getNote = async (id: string) => {
   try {
     connectToDb();
-    const document = await Document.find({slug});
+    const note = await Note.findById(id);
 
-    return document;
+    return JSON.parse(JSON.stringify(note));
   } catch (error) {
     console.log(error);
-    throw new Error('Failed to fetch document!');
+    throw new Error('Failed to fetch note!');
   }
 };
 

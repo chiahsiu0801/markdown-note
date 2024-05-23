@@ -1,10 +1,12 @@
 import { configureStore } from '@reduxjs/toolkit';
 import editorReducer from './features/editor/editorSlice';
+import sidebarReducer from './features/sidebar/sidebarSlice';
 
 export const makeStore = () => {
   return configureStore({
     reducer: {
-      editor: editorReducer 
+      editor: editorReducer,
+      sidebar: sidebarReducer,
     }
   })
 }

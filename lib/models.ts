@@ -1,5 +1,15 @@
 import mongoose from "mongoose";
 
+export type NoteDocument = {
+  title: string;
+  content: string;
+  userId: string;
+  slug: string;
+  createdAt: Date;
+  updatedAt: Date;
+  _id: string;
+}
+
 const userSchema = new mongoose.Schema(
   {
     username: {
@@ -27,7 +37,7 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const documentSchema = new mongoose.Schema(
+const noteSchema = new mongoose.Schema(
   {
     title: {
       type: String,
@@ -44,16 +54,9 @@ const documentSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    parentFolder: {
-      type: String,
-    },
-    isFolder: {
-      type: Boolean,
-      default: false,
-    }
   },
   { timestamps: true }
 );
 
-export const User = mongoose.models.User || mongoose.model('User', userSchema);
-export const Document = mongoose.models.Document || mongoose.model('Document', documentSchema);
+export const User = mongoose.models?.User || mongoose.model('User', userSchema);
+export const Note = mongoose.models?.Note || mongoose.model('Note', noteSchema);

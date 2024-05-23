@@ -11,9 +11,10 @@ type EditorProps = {
   input: string;
   setInput: (value: string) => void;
   editorFocus: boolean;
+  initialContent: string | undefined;
 }
 
-const Editor = ({ input, setInput, editorFocus }: EditorProps) => {
+const Editor = ({ input, setInput, editorFocus, initialContent }: EditorProps) => {
   const dispatch = useAppDispatch();
   const { rows, lineNumbers } = useAppSelector((state: RootState) => state.editor);
 
@@ -38,7 +39,9 @@ const Editor = ({ input, setInput, editorFocus }: EditorProps) => {
     console.log('lineNumbers: ', lineNumbers);
     const activeLineNumber = parseInt(target.style.top) / 28;
     // const activeLineNumber = (parseInt(target.style.top) - 1) / 28;
+
     console.log('activeLineNumber: ', activeLineNumber);
+    console.log('previousCaretTop.current: ', previousCaretTop.current);
 
     let forwardIndex = activeLineNumber;
     let afterwardIndex = activeLineNumber + 1;
@@ -62,6 +65,7 @@ const Editor = ({ input, setInput, editorFocus }: EditorProps) => {
   const handleCaret = useCallback((target: HTMLTextAreaElement): void => {
     setTimeout(() => {
       const posCorrection = Caret.getRelativePosition(target);
+      console.log('posCorrection: ', posCorrection);
 
 
       // If the text is too long and close to right border of textarea,
@@ -73,13 +77,13 @@ const Editor = ({ input, setInput, editorFocus }: EditorProps) => {
 
         caretRef.current!.style.left = activeSpan!.getBoundingClientRect().width >= textareaWidth ? activeSpan!.getBoundingClientRect().width - 2 + 'px' : activeSpan!.getBoundingClientRect().width + 'px';
       } else {
-        target.style.top = posCorrection.top - 3 + 'px';
+        target.style.top = posCorrection.top - 4 + 'px';
         caretRef.current!.style.left = posCorrection.left >= textareaWidth ? posCorrection.left - 2 + 'px' : posCorrection.left + 'px';
-        caretRef.current!.style.top = posCorrection.top + 'px';
+        caretRef.current!.style.top = posCorrection.top - 1 + 'px';
       }
 
       handleActiveRows(target);
-      previousCaretTop.current = posCorrection.top;
+      previousCaretTop.current = posCorrection.top - 1;
       previousCaretPos.current = target.selectionStart;
 
       pastedRef.current = false;
@@ -309,13 +313,13 @@ const Editor = ({ input, setInput, editorFocus }: EditorProps) => {
 
     const pos = Caret.getRelativePosition(textareaRef.current!);
 
-    let activeRow = (pos.top - 3) / 28;
-    // let activeRow = (pos.top - 4) / 28;
+    // let activeRow = (pos.top - 3) / 28;
+    let activeRow = (pos.top - 4) / 28;
 
     if(previousPressedKey.current === 'Backspace') {
       console.log('Caret.getRelativePosition(textareaForDeleteRef.current!).top: ', Caret.getRelativePosition(textareaForDeleteRef.current!).top);
-      activeRow = (Caret.getRelativePosition(textareaForDeleteRef.current!).top - 3) / 28;
-      // activeRow = (Caret.getRelativePosition(textareaForDeleteRef.current!).top - 4) / 28;
+      // activeRow = (Caret.getRelativePosition(textareaForDeleteRef.current!).top - 3) / 28;
+      activeRow = (Caret.getRelativePosition(textareaForDeleteRef.current!).top - 4) / 28;
 
       while(lineNumbers[activeRow] === '') {
         activeRow--;
@@ -457,6 +461,7 @@ const Editor = ({ input, setInput, editorFocus }: EditorProps) => {
 
   const recalculateRowsAndLineNumbers = useCallback(() => {
     const text = previousInputRef.current;
+    console.log('text: ', text);
     let [newLineNumberCounts, newRows] = textSplitIntoRow(text.split('\n'), textareaWidth);
 
     console.log('newLineNumberCounts: ', newLineNumberCounts);
@@ -517,6 +522,12 @@ const Editor = ({ input, setInput, editorFocus }: EditorProps) => {
       textareaRef.current?.blur();
     }
   }, [editorFocus]);
+
+  useEffect(() => {
+    console.log('pathname change');
+    previousInputRef.current = initialContent || "";
+    recalculateRowsAndLineNumbers()
+  }, [recalculateRowsAndLineNumbers, initialContent]);
 
   return (
     <>

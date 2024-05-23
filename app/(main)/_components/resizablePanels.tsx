@@ -1,18 +1,33 @@
 import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { usePathname } from 'next/navigation'
+import { NoteDocument } from "@/lib/models";
 
 import Editor from "@/components/editor";
 import Document from "@/components/document";
+import { getNote } from "@/lib/data";
+import { Button } from "@/components/ui/button";
+import { Save } from "lucide-react";
+import { saveNote } from "@/lib/action";
+import { toast } from "sonner";
+import { useAppSelector } from "@/lib/hooks";
+import { RootState } from "@/lib/store";
 
-type ResizablePanelsProps = {
-  sidebarCollapse: boolean;
-}
+// type ResizablePanelsProps = {
+//   sidebarCollapse: boolean;
+//   noteId: string;
+// }
 
-const ResizablePanels = ({ sidebarCollapse }: ResizablePanelsProps) => {
+const ResizablePanels = () => {
+  const { sidebarCollapse } = useAppSelector((state: RootState) => state.sidebar);
+  const pathname = usePathname().split('/');
+  const noteId = pathname[pathname.length - 1];
+
   const [input, setInput] = useState('');
   const [leftWidth, setLeftWidth] = useState(50);
   const [editorFocus, setEditorFocus] = useState(true);
   const [isLargeScreen, setIsLargeScreen] = useState<boolean | null>(null);
+  const [noteData, setNoteData] = useState<NoteDocument | null>(null);
 
   const editorContainerRef = useRef<HTMLDivElement>(null);
 
@@ -39,6 +54,39 @@ const ResizablePanels = ({ sidebarCollapse }: ResizablePanelsProps) => {
     
     mouseDownEvent.preventDefault();
   }
+
+  const handleSave = async () => {
+    const promise = saveNote(noteId, { content: input });
+
+    toast.promise(promise, {
+      loading: `Saving ${noteData?.title}...`,
+      success: `${noteData?.title} saved!`,
+      error: 'Failed to save note',
+    });
+
+    // Wait for the note creation to complete
+    await promise;
+    // Toggle the state to trigger a re-render of Notes
+    // setNotesUpdated(prevState => !prevState);
+  }
+
+  useEffect(() => {
+    const fetchNote = async () => {
+      try {
+        console.log('fetchNote called');
+        const note: NoteDocument = await getNote(noteId);
+
+        console.log('note: ', note);
+
+        setNoteData(note);
+        setInput(note.content);
+      } catch (error) {
+
+      }
+    };
+
+    fetchNote();
+  }, [noteId]);
 
   useEffect(() => {
     window.addEventListener('click', (e) => {
@@ -70,8 +118,17 @@ const ResizablePanels = ({ sidebarCollapse }: ResizablePanelsProps) => {
       <div
         className={`absolute left-0 w-full lg:w-[calc(100%-260px)] h-[calc(100%-72px)] flex flex-col md:flex-row items-center px-3 gap-2 transition-all duration-300 ${sidebarCollapse ? `lg:left-[130px]` : `lg:left-[260px]`}`}
       >
-        <div className="absolute -top-[38px] left-16 lg:left-3 z-50">
-          <p className="text-xl">directory</p>
+        <div className="absolute -top-[38px] left-16 lg:left-3 z-50 flex items-center">
+          <p className="text-xl">{noteData ? noteData.title : 'Loading...'}</p>
+          <div
+            className="ml-2"
+            onClick={() => handleSave()}
+          >
+            <Button variant="savenote" size="sm">
+              <Save size={18} />
+              <p className="ml-1">Save note</p>
+            </Button>
+          </div>
         </div>
         <div
           suppressHydrationWarning
@@ -84,7 +141,7 @@ const ResizablePanels = ({ sidebarCollapse }: ResizablePanelsProps) => {
             setEditorFocus(true);
           }}
         >
-          <Editor input={input} setInput={setInput} editorFocus={editorFocus} />
+          <Editor input={input} setInput={setInput} editorFocus={editorFocus} initialContent={noteData?.content} />
         </div>
         <div className="md:cursor-ew-resize bg-black w-1/6 md:w-[5px] h-[5px] md:h-1/6 mt-2 rounded-xl" onMouseDown={startResizing}></div>
         <div
