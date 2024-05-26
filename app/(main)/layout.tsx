@@ -12,7 +12,7 @@ const MainLayout = ({
   // const [sidebarCollapse, setSidebarCollapse] = useState(false);
 
   return (
-    <div className="w-full h-screen py-4 relative">
+    <div className="w-full h-screen relative">
       <StoreProvider>
         {/* <Sidebar sidebarCollapse={sidebarCollapse} setSidebarCollapse={setSidebarCollapse} /> */}
         <Sidebar />

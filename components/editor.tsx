@@ -6,15 +6,22 @@ import { RootState, AppDispatch } from "@/lib/store"
 import { increase, decrease, reset } from '../lib/features/editor/editorSlice';
 
 import EditorLine from "./editorLine"
+import { usePathname } from "next/navigation"
 
 type EditorProps = {
   input: string;
   setInput: (value: string) => void;
   editorFocus: boolean;
   initialContent: string | undefined;
+  currentNoteId: string;
 }
 
-const Editor = ({ input, setInput, editorFocus, initialContent }: EditorProps) => {
+const Editor = ({ input, setInput, editorFocus, initialContent, currentNoteId }: EditorProps) => {
+  console.log('Editor mounted');
+
+  const pathname = usePathname().split('/');
+  const noteId = pathname[pathname.length - 1];
+
   const dispatch = useAppDispatch();
   const { rows, lineNumbers } = useAppSelector((state: RootState) => state.editor);
 
@@ -29,6 +36,7 @@ const Editor = ({ input, setInput, editorFocus, initialContent }: EditorProps) =
   const caretForDeleteRef = useRef<HTMLDivElement>(null);
   const previousInputRef = useRef<string>(input);
   const previousCaretTop = useRef<number>(3);
+  const initialCaretTop = useRef<number>(3);
   const previousCaretPos = useRef<number>(0);
   const previousCaretPosForDeleteRef = useRef<number | null>(null);
   const previousPressedKey = useRef<string>('');
@@ -65,25 +73,27 @@ const Editor = ({ input, setInput, editorFocus, initialContent }: EditorProps) =
   const handleCaret = useCallback((target: HTMLTextAreaElement): void => {
     setTimeout(() => {
       const posCorrection = Caret.getRelativePosition(target);
+      const textareaWidthCorrection = textareaWidth === 0 ? textareaRef.current!.getBoundingClientRect().width : textareaWidth;
       console.log('posCorrection: ', posCorrection);
 
 
       // If the text is too long and close to right border of textarea,
       // Caret will have some bug in calculation, use the code below to adjust caret position
       if(posCorrection.top === previousCaretTop.current + 28 && previousPressedKey.current !== 'Enter' && previousPressedKey.current !== 'ArrowDown' && previousPressedKey.current !== 'ArrowUp' && previousPressedKey.current !== 'ArrowLeft' && previousPressedKey.current !== 'ArrowRight' && !pastedRef.current) {
-        const activeRow = (previousCaretTop.current - 3) / 28;
+        // const activeRow = (previousCaretTop.current - 3) / 28;
         // const activeRow = (previousCaretTop.current - 4) / 28;
+        const activeRow = (previousCaretTop.current - initialCaretTop.current) / 28;
         const activeSpan = document.getElementById('rowsContainer')?.querySelectorAll('span')[activeRow];
 
-        caretRef.current!.style.left = activeSpan!.getBoundingClientRect().width >= textareaWidth ? activeSpan!.getBoundingClientRect().width - 2 + 'px' : activeSpan!.getBoundingClientRect().width + 'px';
+        caretRef.current!.style.left = activeSpan!.getBoundingClientRect().width >= textareaWidthCorrection ? activeSpan!.getBoundingClientRect().width - 2 + 'px' : activeSpan!.getBoundingClientRect().width + 'px';
       } else {
-        target.style.top = posCorrection.top - 4 + 'px';
-        caretRef.current!.style.left = posCorrection.left >= textareaWidth ? posCorrection.left - 2 + 'px' : posCorrection.left + 'px';
-        caretRef.current!.style.top = posCorrection.top - 1 + 'px';
+        target.style.top = posCorrection.top - initialCaretTop.current + 'px';
+        caretRef.current!.style.left = posCorrection.left >= textareaWidthCorrection ? posCorrection.left - 2 + 'px' : posCorrection.left + 'px';
+        caretRef.current!.style.top = posCorrection.top + 'px';
       }
 
       handleActiveRows(target);
-      previousCaretTop.current = posCorrection.top - 1;
+      previousCaretTop.current = posCorrection.top;
       previousCaretPos.current = target.selectionStart;
 
       pastedRef.current = false;
@@ -299,6 +309,7 @@ const Editor = ({ input, setInput, editorFocus, initialContent }: EditorProps) =
   };
 
   const processChanges = useCallback((oldText: string, newText: string) => {
+    const textareaWidthCorrection = textareaWidth === 0 ? textareaRef.current!.getBoundingClientRect().width : textareaWidth;
     let changedSection = findDifference(oldText, newText);
 
     // Add logic here to process only the changed section as needed
@@ -308,18 +319,20 @@ const Editor = ({ input, setInput, editorFocus, initialContent }: EditorProps) =
     if(changedSection === '\n') {
       changedRows = [''];
     } else {
-      [changedRowsCount, changedRows] = textSplitIntoRow(changedSection.split('\n'), textareaWidth);
+      [changedRowsCount, changedRows] = textSplitIntoRow(changedSection.split('\n'), textareaWidthCorrection);
     }
 
     const pos = Caret.getRelativePosition(textareaRef.current!);
 
     // let activeRow = (pos.top - 3) / 28;
-    let activeRow = (pos.top - 4) / 28;
+    // let activeRow = (pos.top - 4) / 28;
+    let activeRow = (pos.top - initialCaretTop.current) / 28;
 
     if(previousPressedKey.current === 'Backspace') {
       console.log('Caret.getRelativePosition(textareaForDeleteRef.current!).top: ', Caret.getRelativePosition(textareaForDeleteRef.current!).top);
       // activeRow = (Caret.getRelativePosition(textareaForDeleteRef.current!).top - 3) / 28;
-      activeRow = (Caret.getRelativePosition(textareaForDeleteRef.current!).top - 4) / 28;
+      // activeRow = (Caret.getRelativePosition(textareaForDeleteRef.current!).top - 4) / 28;
+      activeRow = (Caret.getRelativePosition(textareaForDeleteRef.current!).top - initialCaretTop.current) / 28;
 
       while(lineNumbers[activeRow] === '') {
         activeRow--;
@@ -409,10 +422,10 @@ const Editor = ({ input, setInput, editorFocus, initialContent }: EditorProps) =
     console.log('prevPrefixLastNewline: ', prevPrefixLastNewline);
     console.log('prevSuffixFirstNewline: ', prevSuffixFirstNewline);
 
-    console.log(`textSplitIntoRow(oldText.substring(prevPrefixLastNewline, prevSuffixFirstNewline).split('\n'), textareaWidth)[0]: `, textSplitIntoRow(oldText.substring(prevPrefixLastNewline, prevSuffixFirstNewline).split('\n'), textareaWidth)[0]);
-    console.log(`textSplitIntoRow(oldText.substring(prevPrefixLastNewline, prevSuffixFirstNewline).split('\n'), textareaWidth)[1]: `, textSplitIntoRow(oldText.substring(prevPrefixLastNewline, prevSuffixFirstNewline).split('\n'), textareaWidth)[1]);
+    console.log(`textSplitIntoRow(oldText.substring(prevPrefixLastNewline, prevSuffixFirstNewline).split('\n'), textareaWidthCorrection)[0]: `, textSplitIntoRow(oldText.substring(prevPrefixLastNewline, prevSuffixFirstNewline).split('\n'), textareaWidthCorrection)[0]);
+    console.log(`textSplitIntoRow(oldText.substring(prevPrefixLastNewline, prevSuffixFirstNewline).split('\n'), textareaWidthCorrection)[1]: `, textSplitIntoRow(oldText.substring(prevPrefixLastNewline, prevSuffixFirstNewline).split('\n'), textareaWidthCorrection)[1]);
 
-    const [splitedBeforeChangeLineCounts, splitedBeforeChangeLines] = textSplitIntoRow(oldText.substring(prevPrefixLastNewline, prevSuffixFirstNewline).split('\n'), textareaWidth);
+    const [splitedBeforeChangeLineCounts, splitedBeforeChangeLines] = textSplitIntoRow(oldText.substring(prevPrefixLastNewline, prevSuffixFirstNewline).split('\n'), textareaWidthCorrection);
 
     // let rowCountBeforeChange =
     //   textSplitIntoRow(oldText.substring(prevPrefixLastNewline, prevSuffixFirstNewline).split('\n'), textareaWidth)[0].
@@ -447,7 +460,7 @@ const Editor = ({ input, setInput, editorFocus, initialContent }: EditorProps) =
         activeRow,
         indexOfNewline,
         rowCountBeforeChange,
-        textareaWidth,
+        textareaWidth: textareaWidthCorrection,
         changedRowsCount,
       }));
     }
@@ -462,8 +475,15 @@ const Editor = ({ input, setInput, editorFocus, initialContent }: EditorProps) =
   const recalculateRowsAndLineNumbers = useCallback(() => {
     const text = previousInputRef.current;
     console.log('text: ', text);
-    let [newLineNumberCounts, newRows] = textSplitIntoRow(text.split('\n'), textareaWidth);
 
+    let newLineNumberCounts;
+    let newRows;
+
+    if(textareaWidth === 0) {
+      [newLineNumberCounts, newRows] = textSplitIntoRow(text.split('\n'), textareaRef.current!.getBoundingClientRect().width);
+    } else {
+      [newLineNumberCounts, newRows] = textSplitIntoRow(text.split('\n'), textareaWidth);
+    }
     console.log('newLineNumberCounts: ', newLineNumberCounts);
     console.log('newRows: ', newRows);
 
@@ -476,6 +496,11 @@ const Editor = ({ input, setInput, editorFocus, initialContent }: EditorProps) =
       newRows,
     }));
   }, [textareaWidth, dispatch]);
+
+  // useEffect(() => {
+  //   // console.log('first set textarea width: ', textareaRef.current!.getBoundingClientRect().width);
+  //   setTextareaWidth(textareaRef.current!.getBoundingClientRect().width);
+  // }, [])
 
   useEffect(() => {
     const resizeObserver = new ResizeObserver(() => {
@@ -524,10 +549,22 @@ const Editor = ({ input, setInput, editorFocus, initialContent }: EditorProps) =
   }, [editorFocus]);
 
   useEffect(() => {
-    console.log('pathname change');
+    console.log('note id change');
     previousInputRef.current = initialContent || "";
+    console.log('previousInputRef.current when note id change: ', previousInputRef.current);
+
     recalculateRowsAndLineNumbers()
   }, [recalculateRowsAndLineNumbers, initialContent]);
+
+  useEffect(() => {
+    const initialCaretPos = Caret.getRelativePosition(textareaRef.current!);
+
+    if((initialCaretPos.top - 3) % 28 === 0) {
+      initialCaretTop.current = 3;
+    } else {
+      initialCaretTop.current = 4;
+    }
+  });
 
   return (
     <>

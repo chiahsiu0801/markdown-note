@@ -11,11 +11,8 @@ const sidebarSlice = createSlice({
     toggleSidebar: (state) => {
       state.sidebarCollapse = !state.sidebarCollapse;
     },
-    setSidebarCollapse: (state, action) => {
-      state.sidebarCollapse = action.payload;
-    },
   },
 });
 
-export const { toggleSidebar, setSidebarCollapse } = sidebarSlice.actions;
+export const { toggleSidebar } = sidebarSlice.actions;
 export default sidebarSlice.reducer;

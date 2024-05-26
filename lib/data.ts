@@ -22,18 +22,6 @@ export const getNotes = async () => {
   }
 };
 
-export const getNote = async (id: string) => {
-  try {
-    connectToDb();
-    const note = await Note.findById(id);
-
-    return JSON.parse(JSON.stringify(note));
-  } catch (error) {
-    console.log(error);
-    throw new Error('Failed to fetch note!');
-  }
-};
-
 export const getUser = async (id: Types.ObjectId) => {
   try {
     connectToDb();

@@ -1,13 +1,19 @@
 import { configureStore } from '@reduxjs/toolkit';
 import editorReducer from './features/editor/editorSlice';
 import sidebarReducer from './features/sidebar/sidebarSlice';
+import noteReducer from './features/note/noteSlice';
 
 export const makeStore = () => {
   return configureStore({
     reducer: {
       editor: editorReducer,
       sidebar: sidebarReducer,
-    }
+      notes: noteReducer,
+    },
+    middleware: (getDefaultMiddleware) =>
+      getDefaultMiddleware({
+        serializableCheck: false,
+      }),
   })
 }
 

@@ -63,12 +63,15 @@ export const textSplitIntoRow = (value: string[], textareaWidth: number): [numbe
     // Split words that exceed the textarea width
     for(let i = 0; i < words.length; i++) {
       let wordWidth = measureTextWidth(font, words[i]);
+      console.log('words[i]: ', words[i]);
+      console.log('wordWidth: ', wordWidth);
 
       if(words[i][words[i].length - 1] === ' ' && words[i] !== ' ') {
         wordWidth -= spaceWidth;
       }
 
       if(wordWidth > textareaWidth) {
+        console.log('textareaWidth: ', textareaWidth);
         let index = 1;
 
         while(index <= words[i].length && measureTextWidth(font, words[i].substring(0, index)) < textareaWidth) {
@@ -77,6 +80,9 @@ export const textSplitIntoRow = (value: string[], textareaWidth: number): [numbe
 
         const part1 = words[i].substring(0, index - 1);
         const part2 = words[i].substring(index - 1);
+
+        console.log('part1: ', part1);
+        console.log('part2: ', part2);
 
         words.splice(i, 1, part1, part2);
       }

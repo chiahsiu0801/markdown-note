@@ -79,7 +79,10 @@ const config = {
       },
       width: {
         inherit: 'inherit',
-      }
+      },
+      transitionTimingFunction: {
+        'custom-ease': 'cubic-bezier(0.165, 0.84, 0.44, 1)',
+      },
     },
   },
   plugins: [
