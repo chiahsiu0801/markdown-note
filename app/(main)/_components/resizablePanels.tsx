@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { cn } from "@/lib/utils";
+import { cn, detectDevice } from "@/lib/utils";
 import { usePathname, useRouter } from 'next/navigation'
 import { NoteDocument } from "@/lib/models";
 
@@ -14,6 +14,7 @@ import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { RootState } from "@/lib/store";
 import { Input } from "@/components/ui/input";
 import { renameNotes, updateNote } from '../../../lib/features/note/noteSlice';
+import EditorMobile from "../../../components/editorMobile";
 
 const ResizablePanels = () => {
   const dispatch = useAppDispatch();
@@ -224,7 +225,11 @@ const ResizablePanels = () => {
               setEditorFocus(true);
             }}
           >
-            <Editor input={input} setInput={setInput} editorFocus={editorFocus} initialContent={noteData?.content} currentNoteId={noteId} />
+            {
+              detectDevice() === "Desktop" ?
+              <Editor input={input} setInput={setInput} editorFocus={editorFocus} initialContent={noteData?.content} /> :
+              <EditorMobile input={input} setInput={setInput} editorFocus={editorFocus} initialContent={noteData?.content} />
+            }
           </div>
           <div className="md:cursor-ew-resize bg-black w-1/6 md:w-[5px] h-[5px] md:h-1/6 mt-1 md:mt-0 rounded-xl" onMouseDown={startResizing}></div>
           <div

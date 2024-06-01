@@ -133,3 +133,24 @@ export const transferLineCountsToLineNumbers = (lineCountsArr: number[], startli
 
   return lineNumbersArr;
 }
+
+export const detectDevice = () => {
+  const userAgent = navigator.userAgent;
+
+  // Check for iOS
+  if (/iPad|iPhone|iPod/.test(userAgent)) {
+    return 'iOS';
+  }
+
+  // Check for iPadOS
+  if (navigator.userAgent.includes('Mac') && 'ontouchend' in document) {
+    return 'iPadOS';
+  }
+
+  // Check for Desktop
+  if (/Windows|Macintosh|Linux/.test(userAgent)) {
+    return 'Desktop';
+  }
+
+  return 'Unknown';
+}

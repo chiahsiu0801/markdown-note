@@ -15,7 +15,6 @@ type EditorProps = {
   setInput: (value: string) => void;
   editorFocus: boolean;
   initialContent: string | undefined;
-  currentNoteId: string;
 }
 
 const Editor = ({ input, setInput, editorFocus, initialContent }: EditorProps) => {
