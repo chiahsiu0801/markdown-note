@@ -14,8 +14,6 @@ import { fetchNotes, toggleIsDeleting } from "@/lib/features/note/noteSlice";
 import { signOut, useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { getUser } from "@/lib/data";
-
-// import type { AdapterSession as BaseAdapterSession } from "next-auth/adapters";
 import { ObjectId } from "mongoose";
 import { Spinner } from "@/components/spinner";
 import { cn } from "@/lib/utils";
@@ -44,8 +42,6 @@ const Sidebar = () => {
   const { isDeleting, notes } = useAppSelector((state: RootState) => state.notes);
   const [avatarImg, setAvatarImg] = useState<string>('');
   const [inDashboard, setInDashboard] = useState(lastSegment === 'notes');
-  // const [notesUpdated, setNotesUpdated] = useState(false);
-  // const [isDeleting, setIsDeleting] = useState(false);
 
   const handleCreate = async () => {
     const promise = createNote(userId);
@@ -65,7 +61,6 @@ const Sidebar = () => {
   }
 
   const handleDelete = () => {
-    // setIsDeleting(prevState => !prevState);
     dispatch(toggleIsDeleting());
   }
 

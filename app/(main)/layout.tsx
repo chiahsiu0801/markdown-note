@@ -1,9 +1,8 @@
-"use client";
+import { Metadata } from 'next'
 
-import Sidebar from "./_components/sidebar";
-import StoreProvider from "../StoreProvider";
-import { SkeletonTheme } from 'react-loading-skeleton';
-import SearchCommand from "@/components/searchCommand";
+export const metadata: Metadata = {
+  title: 'Note Dashboard',
+}
 
 const MainLayout = ({
   children
@@ -12,15 +11,9 @@ const MainLayout = ({
 }) => {
 
   return (
-    <SkeletonTheme baseColor="#cad0d86f" highlightColor="#8c929a63" height={22}>
-      <StoreProvider>
-        <div className="w-full h-screen max-h-screen relative">
-            <Sidebar />
-            {children}
-        </div>
-        <SearchCommand />
-      </StoreProvider>
-    </SkeletonTheme>
+    <>
+      {children}
+    </>
    );
 }
  

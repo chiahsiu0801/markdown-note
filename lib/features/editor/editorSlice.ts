@@ -3,11 +3,8 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { offsetLineNumbers, textSplitIntoRow, transferLineCountsToLineNumbers } from '@/lib/utils';
 
 interface EditorState {
-  // input: string;
   lineNumbers: (number | string)[];
   rows: string[];
-  // textareaWidth: number;
-  // activeRows: number[];
 }
 
 interface IncreasePayload {
@@ -35,11 +32,8 @@ interface ResetPayload {
 }
 
 const initialState: EditorState = {
-  // input: '',
   lineNumbers: [1],
   rows: [],
-  // textareaWidth: 0,
-  // activeRows: []
 };
 
 const editorSlice = createSlice({

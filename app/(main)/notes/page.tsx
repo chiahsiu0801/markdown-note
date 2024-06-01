@@ -32,29 +32,6 @@ const NotePage = () => {
     >
       <div className="w-full py-4 px-6 mx-4 bg-slate-300 rounded-xl shadow-xl">
         <h1 className="text-2xl font-medium mb-2">Note dashboard</h1>
-        {/* <Table>
-          <TableCaption>List of your notes.</TableCaption>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Title</TableHead>
-              <TableHead>Created at</TableHead>
-              <TableHead>Last modified at</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {
-              notes.map(note => (
-                <TableRow key={note._id} onClick={() => {
-                  router.push(`/notes/${note._id}`)
-                }} className="cursor-pointer">
-                  <TableCell className="font-medium truncate">{note.title}</TableCell>
-                  <TableCell>{note.createdAt.toLocaleString()}</TableCell>
-                  <TableCell>{note.updatedAt.toLocaleString()}</TableCell>
-                </TableRow>
-              ))
-            }
-          </TableBody>
-        </Table> */}
         <DataTable columns={columns} data={notes.map(note => {
           return {
             _id: note._id,

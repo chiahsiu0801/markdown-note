@@ -64,7 +64,6 @@ export function CheckboxReactHookFormMultiple({ items, transitioning, userId }: 
     // Wait for the note creation to complete
     await promise;
     // Toggle the state to trigger a re-render of Notes
-    // setIsDeleting(false);
     dispatch(toggleIsDeleting())
     dispatch(fetchNotes(userId));
 

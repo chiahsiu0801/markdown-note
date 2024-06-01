@@ -46,7 +46,7 @@ export const getNote = async (id: string) => {
     await connectToDb();
     const note = await Note.findById(id);
 
-    return note.content;
+    return note;
   } catch (error) {
     throw new Error('Failed to fetch note!');
   }

@@ -1,30 +1,29 @@
-"use client";
+import { getNote } from "@/lib/action";
+import ResizePanelsPage from "./resizePanelsPage";
+import { Metadata } from 'next'
 
-import Sidebar from '../../_components/sidebar';
-import ResizablePanels from "../../_components/resizablePanels";
-import StoreProvider from '@/app/StoreProvider';
+type Props = {
+  params: { noteId: string }
+}
 
-import { useState } from 'react';
-import { useParams } from 'next/navigation';
+export async function generateMetadata(
+  { params }: Props,
+): Promise<Metadata> {
+  // read route params
+  const id = params.noteId
 
-// type SingleNotePageProps = {
-//   params: { noteId: string };
-// }
+  const note = await getNote(id);
+
+  return {
+    title: note.title,
+  }
+}
 
 const SingleNotePage = () => {
-  // const noteId = useParams<{ tag: string }>()
-
-  // const [sidebarCollapse, setSidebarCollapse] = useState(false);
-
   return (
-    // <div className="w-full h-screen py-4 relative">
-    //   <div>
-    //     <Sidebar sidebarCollapse={sidebarCollapse} setSidebarCollapse={setSidebarCollapse} />
-    //     <StoreProvider>
-    <ResizablePanels />
-    //     </StoreProvider>
-    //   </div>
-    // </div>
+    <>
+      <ResizePanelsPage />
+    </>
    );
 }
 

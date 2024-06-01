@@ -1,10 +1,9 @@
-import { useEffect, useRef, useState, useCallback, useMemo } from "react"
+import { useEffect, useRef, useState, useCallback } from "react"
 import { Caret } from 'textarea-caret-ts'
 import { cn, textSplitIntoRow, transferLineCountsToLineNumbers } from "@/lib/utils"
 import { useAppDispatch, useAppSelector } from "@/lib/hooks"
-import { RootState, AppDispatch } from "@/lib/store"
+import { RootState } from "@/lib/store"
 import { increase, decrease, reset } from '../lib/features/editor/editorSlice';
-import { Spinner } from "./spinner"
 import { usePathname } from "next/navigation"
 
 import EditorLine from "./editorLine"
@@ -500,7 +499,6 @@ const Editor = ({ input, setInput, editorFocus, initialContent }: EditorProps) =
         ref={textareaForDeleteRef}
         onChange={(e) => {
           setInput(e.target.value);
-          // textareaForDeleteRef.current!.scrollTop = textRef.current!.scrollTop;
           handleActiveRowForDelete(e.target);
         }}
         onKeyUp={handleKeyUp}
@@ -529,7 +527,6 @@ const Editor = ({ input, setInput, editorFocus, initialContent }: EditorProps) =
           {
             noteIdRef.current ?
             rows.map((row, index) => {
-            // textSplitIntoRow(input.split('\n'))[1].map((row, index) => {
               let active = false;
 
               if(activeRows.includes(index)) {
@@ -565,7 +562,6 @@ const Editor = ({ input, setInput, editorFocus, initialContent }: EditorProps) =
             previousCaretPos.current = e.target.selectionStart;
           }}
           onKeyDown={handleKeyDown}
-          // onKeyUp={handleKeyUp}
           onPaste={(e) => {
             pastedRef.current = true;
             pastedForDeleteRef.current = true;

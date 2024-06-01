@@ -5,23 +5,17 @@ import { NoteDocument } from "@/lib/models";
 
 import Editor from "@/components/editor";
 import Document from "@/components/document";
-// import { getNote } from "@/lib/data";
+
 import { Button } from "@/components/ui/button";
 import { ArrowBigLeftDash, PencilLine, Save } from "lucide-react";
-import { saveNote, getNote } from "@/lib/action";
+import { saveNote } from "@/lib/action";
 import { toast } from "sonner";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { RootState } from "@/lib/store";
 import { Input } from "@/components/ui/input";
 import { renameNotes, updateNote } from '../../../lib/features/note/noteSlice';
 
-// type ResizablePanelsProps = {
-//   sidebarCollapse: boolean;
-//   noteId: string;
-// }
-
 const ResizablePanels = () => {
-  const router = useRouter();
   const dispatch = useAppDispatch();
 
   const { sidebarCollapse } = useAppSelector((state: RootState) => state.sidebar);
@@ -108,10 +102,6 @@ const ResizablePanels = () => {
   }
 
   const handleRename = (target: HTMLInputElement) => {
-    // dispatch(setNewName({
-    //   renamingNoteId: noteData!._id,
-    //   newName: target.value,
-    // }))
     dispatch(renameNotes({
       renamingFinish: false,
       renamingNoteId: noteData!._id,

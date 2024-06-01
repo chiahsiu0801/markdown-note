@@ -12,7 +12,6 @@ const Notes = ({ userId }: { userId: string }) => {
   const dispatch = useAppDispatch();
   const { notes, isDeleting, renamingNoteId, newName } = useAppSelector((state: RootState) => state.notes);
   
-  // const [notes, setNotes] = useState<NoteDocument[]>([]);
   const [transitioning, setTransitioning] = useState(false);
 
   // Function to toggle transitioning state for smooth transitions
@@ -22,12 +21,6 @@ const Notes = ({ userId }: { userId: string }) => {
       setTransitioning(false);
     }, 100); // Match this duration with your CSS transition duration
   };
-
-  // useEffect(() => {
-  //   if(userId) {
-  //     dispatch(fetchNotes(userId));
-  //   }
-  // }, [dispatch, userId]);
 
   useEffect(() => {
     toggleTransition();

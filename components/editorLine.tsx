@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 
 import { cn } from "@/lib/utils"
 
@@ -19,6 +19,3 @@ const EditorLine = ({ row, width, active }: EditorLineProps) => {
 }
  
 export default React.memo(EditorLine);
-
-// Loremipsumdolor,sitametconsecteturadipisicingelit.Harumseddolorumquaseumitaquecupiditatevoluptatumperferendisquodaccusantium,placeataperiamratione.Undeillumidrovidentevenietquasmagniautem.
-// testtesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttest
