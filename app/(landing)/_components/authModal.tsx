@@ -34,8 +34,6 @@ export function AuthModal({ buttonText, inContent }: AuthModalProps) {
 
   const router = useRouter();
 
-  const { data: session } = useSession();
-
   const baseSchema = z.object({
     email: z
       .string()
@@ -69,7 +67,7 @@ export function AuthModal({ buttonText, inContent }: AuthModalProps) {
       .min(6, {
         message: "Confirm-Password must be at least 6 characters.",
       }),
-    avatarImg: z.instanceof(File).optional(),
+    avatarImg: z.instanceof(File).optional().refine((file) => file!.size <= 2000000, `Max image size is 2MB.`),
   }).superRefine(({ confirmPassword, password }, ctx) => {
     if(confirmPassword !== password) {
       ctx.addIssue({

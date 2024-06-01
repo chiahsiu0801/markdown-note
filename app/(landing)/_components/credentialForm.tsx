@@ -15,7 +15,6 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { Loader } from "lucide-react"
 import { Spinner } from "@/components/spinner"
 
 type FormProps = {

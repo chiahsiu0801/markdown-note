@@ -183,17 +183,32 @@ const Sidebar = () => {
               </div>
             </div>
             <div className="h-[72px] bg-slate-400 rounded-lg px-2 py-4 my-2 shadow-lg hover:bg-muted/50 cursor-pointer">
-              <Link
-                href={`/notes/${findLatest()}`} className="text-sm flex justify-center items-center font-medium h-full"
-                onClick={() => {
-                  if(window.innerWidth < 1024) {
-                    dispatch(toggleSidebar());
-                  }
-                }}
-              >
-                <Pencil className="mr-2" />
-                <span className="text-center text-sm md:text-lg lg:text-sm">Go to edit the<br/> last modified note</span>
-              </Link>
+              {
+                notes.length === 0 ?
+                <div
+                  className="text-sm flex justify-center items-center font-medium h-full"
+                  onClick={() => {
+                    handleCreate();
+                    if(window.innerWidth < 1024) {
+                      dispatch(toggleSidebar());
+                    }
+                  }}
+                >
+                  <Pencil className="mr-2" />
+                  <span className="text-center text-sm md:text-lg lg:text-sm">Create new note</span>
+                </div> :
+                <Link
+                  href={`/notes/${findLatest()}`} className="text-sm flex justify-center items-center font-medium h-full"
+                  onClick={() => {
+                    if(window.innerWidth < 1024) {
+                      dispatch(toggleSidebar());
+                    }
+                  }}
+                >
+                  <Pencil className="mr-2" />
+                  <span className="text-center text-sm md:text-lg lg:text-sm">Go to edit the<br/> last modified note</span>
+                </Link>
+              }
             </div>
             <div className="h-[72px] bg-slate-400 rounded-lg px-2 py-4 my-2 shadow-lg hover:bg-muted/50 cursor-pointer">
               <div
