@@ -1,30 +1,12 @@
 "use client";
 
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
 import { useAppSelector } from "@/lib/hooks";
 import { RootState } from "@/lib/store";
-import { cn } from "@/lib/utils";
-import { useRouter } from "next/navigation";
 import { columns } from "../_components/columns";
 import { DataTable } from "../_components/dataTable";
-import { useEffect, useState } from "react";
-
 
 const NotePage = () => {
-  const { sidebarCollapse } = useAppSelector((state: RootState) => state.sidebar);
   const { notes } = useAppSelector((state: RootState) => state.notes);
-
-  const [pageSize, setPageSize] = useState(10);
-
-  const router = useRouter();
 
   return (
     <main

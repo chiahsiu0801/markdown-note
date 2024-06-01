@@ -9,6 +9,7 @@ type NoteState = {
   isDeleting: boolean;
   renamingNoteId: string;
   newName: string;
+  lastUpdatedNoteId: string;
 }
 
 type RenamePayload = {
@@ -29,6 +30,7 @@ const initialState: NoteState = {
   isDeleting: false,
   renamingNoteId: '',
   newName: '',
+  lastUpdatedNoteId: '',
 };
 
 export const fetchNotes = createAsyncThunk('notes/fetchNotes', async (userId: string, thunkAPI) => {
@@ -66,6 +68,7 @@ const noteSlice = createSlice({
       state.notes.forEach(note => {
         if(note._id === action.payload.updatingNoteId) {
           note.content = action.payload.newContent;
+          state.lastUpdatedNoteId = action.payload.updatingNoteId;
         }
       })
     }

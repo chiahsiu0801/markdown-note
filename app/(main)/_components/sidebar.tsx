@@ -39,7 +39,7 @@ const Sidebar = () => {
 
   const dispatch = useAppDispatch();
   const { sidebarCollapse } = useAppSelector((state: RootState) => state.sidebar);
-  const { isDeleting, notes } = useAppSelector((state: RootState) => state.notes);
+  const { isDeleting, notes, lastUpdatedNoteId } = useAppSelector((state: RootState) => state.notes);
   const [avatarImg, setAvatarImg] = useState<string>('');
   const [inDashboard, setInDashboard] = useState(lastSegment === 'notes');
 
@@ -69,6 +69,10 @@ const Sidebar = () => {
   }
 
   const findLatest = () => {
+    if(lastUpdatedNoteId) {
+      return lastUpdatedNoteId;
+    }
+
     if(notes.length === 0) {
       return '';
     }
@@ -245,12 +249,14 @@ const Sidebar = () => {
       {
         !inDashboard &&
         <div className={` absolute z-50 lg:right-4 ${sidebarCollapse ? `left-[calc(100%+12px)] lg:left-auto` : `left-[calc(100%-50px)]`}`} onClick={() => dispatch(toggleSidebar())}>
-          <Button variant="ghost" size="icon">
-            <div className={`hidden lg:block transition-transform duration-700 ${sidebarCollapse && `rotate-180`}`}>
-              <ChevronsLeft />
+          <Button variant="ghost" size="icon" className={`hidden lg:block transition-transform duration-700 ${sidebarCollapse && `rotate-180`}`}>
+            <div  >
+              <ChevronsLeft className="mx-auto" />
             </div>
-            <div className="block lg:hidden">
-              <MenuIcon />
+          </Button>
+          <Button variant="secondary" size="icon" className="block lg:hidden">
+            <div  >
+              <MenuIcon className="mx-auto" />
             </div>
           </Button>
         </div>
