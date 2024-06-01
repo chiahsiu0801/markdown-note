@@ -1,26 +1,26 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { Note } from "./models";
+import { Note, User } from "./models";
 import { connectToDb } from "./utilsDb";
+import { writeFile } from "fs/promises";
+import path from "path";
+import bcrypt from "bcryptjs";
 
-export const createNote = async () => {
+export const createNote = async (userId: string) => {
   try {
     connectToDb();
     const initialNote = new Note({
       title: 'Untitled',
       content: '',
-      userId: 'Guest',
+      userId: userId,
       slug: 'newnote',
     });
 
     const newNote = await initialNote.save();
-    console.log("saved to db");
 
     return JSON.parse(JSON.stringify(newNote));
-    // revalidatePath("/notes");
   } catch (err) {
-    console.log(err);
     return { error: "Something went wrong!" };
   }
 };
@@ -35,11 +35,8 @@ export const saveNote = async (_id: string, updateData: { content?: string, titl
       return { error: "Note not found!" };
     }
 
-    console.log("Note updated:", updatedNote);
-
     return JSON.parse(JSON.stringify(updatedNote));
   } catch (err) {
-    console.log(err);
     return { error: "Something went wrong!" };
   }
 };
@@ -49,11 +46,8 @@ export const getNote = async (id: string) => {
     await connectToDb();
     const note = await Note.findById(id);
 
-    console.log('note in getNote: ', note);
-
     return note.content;
   } catch (error) {
-    console.log(error);
     throw new Error('Failed to fetch note!');
   }
 };
@@ -71,12 +65,47 @@ export const deleteNotes = async (ids: string[]) => {
       return { error: "No notes found to delete!" };
     }
 
-    console.log("Notes deleted:", result);
-
     return { message: "Notes deleted successfully!", result };
   } catch (err) {
-    // Log and return the error message
-    console.log(err);
     return { error: "Something went wrong!" };
   }
 };
+
+export const register = async(formData: FormData) => {
+  try {
+    const { username, email, password } =
+    Object.fromEntries(formData);
+
+    const avatarImgData = formData.get('avatarImg') as File;
+
+    let buffer = null;
+
+    if (formData.get('avatarImg') !== '') {
+      buffer = Buffer.from(await avatarImgData.arrayBuffer());
+    }
+
+    connectToDb();
+
+    const user = await User.findOne({ email });
+
+    if (user) {
+      throw new Error('Email has been used!');
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password as string, salt);
+
+    const newUser = new User({
+      username,
+      email,
+      password: hashedPassword,
+      img: buffer,
+    });
+
+    await newUser.save();
+
+    return { message: "Account created!" };
+  } catch (error: any) {
+    return { error: error.message };
+  }
+}

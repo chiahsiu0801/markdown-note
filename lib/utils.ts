@@ -12,20 +12,11 @@ export const measureTextWidth = (font: string, text: string): number => {
   context.font = font;
 
   const whiteSpace = ' '; // 10.8369140625
-  // console.log('whiteSpace width: ', context.measureText(whiteSpace));
   const textTrimEndLength = text.trimEnd().length;
   const textLength = text.length;
-  // let whiteSpaceWidthOffset = 0;
-
-  // if(text.trim() === '') {
-  //   whiteSpaceWidthOffset = text.length;
-  // } else if(textTrimEndLength !== textLength) {
-  //   whiteSpaceWidthOffset = textLength - textTrimEndLength;
-  // }
 
   const { actualBoundingBoxLeft, actualBoundingBoxRight } = context.measureText(text);
   return context.measureText(text).width;
-  // return Math.ceil(Math.abs(actualBoundingBoxLeft) + Math.abs(actualBoundingBoxRight)) + (whiteSpaceWidthOffset * context.measureText(whiteSpace).width);
 };
 
 export const textSplitIntoRow = (value: string[], textareaWidth: number): [number[], string[]] => {
@@ -58,20 +49,15 @@ export const textSplitIntoRow = (value: string[], textareaWidth: number): [numbe
       lines.push(currentLine);
     }
 
-    console.log('words before: ', words);
-
     // Split words that exceed the textarea width
     for(let i = 0; i < words.length; i++) {
       let wordWidth = measureTextWidth(font, words[i]);
-      console.log('words[i]: ', words[i]);
-      console.log('wordWidth: ', wordWidth);
 
       if(words[i][words[i].length - 1] === ' ' && words[i] !== ' ') {
         wordWidth -= spaceWidth;
       }
 
       if(wordWidth > textareaWidth) {
-        console.log('textareaWidth: ', textareaWidth);
         let index = 1;
 
         while(index <= words[i].length && measureTextWidth(font, words[i].substring(0, index)) < textareaWidth) {
@@ -81,19 +67,13 @@ export const textSplitIntoRow = (value: string[], textareaWidth: number): [numbe
         const part1 = words[i].substring(0, index - 1);
         const part2 = words[i].substring(index - 1);
 
-        console.log('part1: ', part1);
-        console.log('part2: ', part2);
-
         words.splice(i, 1, part1, part2);
       }
     }
 
-    console.log('words after: ', words);
-
     // If currentLine width plus current word width is over the textarea width, create a new row
     for(let i = 0; i < words.length; i++) {
       if(words[i][0] === '\t') {
-        console.log('tab');
         words[i] = '    ' + words[i].slice(1);
       }
 
@@ -105,22 +85,12 @@ export const textSplitIntoRow = (value: string[], textareaWidth: number): [numbe
 
       const lineWidth = measureTextWidth(font, currentLine);
 
-      console.log('words[i]: ', words[i].split(''));
-      console.log('wordWidth: ', wordWidth);
-      console.log('lineWidth: ', lineWidth);
-
-      console.log('lineWidth + wordWidth: ', lineWidth + wordWidth);
-      console.log('textareaWidth: ', textareaWidth);
-      console.log('currentLine: ', currentLine);
-
       if(lineWidth + wordWidth > textareaWidth) {
-        console.log('over');
         lines.push(currentLine);
 
         count++;
         currentLine = words[i];
       } else {
-        console.log('currentLine added');
         currentLine += words[i];
       }
     }

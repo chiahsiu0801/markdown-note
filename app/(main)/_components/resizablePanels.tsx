@@ -25,9 +25,7 @@ const ResizablePanels = () => {
   const dispatch = useAppDispatch();
 
   const { sidebarCollapse } = useAppSelector((state: RootState) => state.sidebar);
-  // const { newNoteName } = useAppSelector((state: RootState) => state.sidebar);
   const { notes, newName } = useAppSelector((state: RootState) => state.notes);
-  console.log('notes in resizablePanels: ', notes);
   const pathname = usePathname().split('/');
   const noteId = pathname[pathname.length - 1];
 
@@ -50,9 +48,10 @@ const ResizablePanels = () => {
 
     const doDrag = (mouseMoveEvent: MouseEvent) => {
       const newWidth = ((mouseMoveEvent.clientX - startX) / totalWidth) * 100 + startWidth;
-      console.log(mouseMoveEvent.clientX);
-      console.log(startX);
-      setLeftWidth(newWidth);
+
+      if(newWidth >= 35 && newWidth <= 65) {
+        setLeftWidth(newWidth);
+      }
     }
 
     const stopDrag = () => {
@@ -74,8 +73,6 @@ const ResizablePanels = () => {
       success: `${noteData?.title} saved!`,
       error: 'Failed to save note',
     });
-
-    console.log('saved');
 
     // Wait for the note creation to complete
     await promise;
@@ -136,35 +133,12 @@ const ResizablePanels = () => {
     }
   }, [newName]);
 
-  // useEffect(() => {
-  //   const fetchNote = async () => {
-  //     try {
-  //       console.log('fetchNote called');
-  //       console.log('noteId: ', noteId);
-  //       // const note: NoteDocument = await getNote(noteId);
-  //       const { content } = await getNote(noteId);
-  //       console.log('content: ', content);
-
-  //       // setNoteData(note);
-  //       // setInput(note.content);
-  //     } catch (error) {
-  //       console.log(error);
-  //     }
-  //   };
-
-  //   fetchNote();
-  // }, [noteId]);
-
   useEffect(() => {
-    console.log('setNoteData called');
-
     if (notes.length > 0) {
       const foundNote = notes.find(note => note._id === noteId) || null;
-      console.log('foundNote: ', foundNote);
 
       if (noteData?._id !== foundNote?._id) {
         setNoteData(foundNote);
-        console.log('noteData updated');
         setInput(foundNote?.content || '');
       }
     }
@@ -205,47 +179,49 @@ const ResizablePanels = () => {
         <div
           className={`absolute w-full lg:w-[calc(100%-260px)] h-[calc(100%-70px)] flex flex-col md:flex-row items-center px-3 gap-2`}
         >
-          <div className="absolute h-[38px] -top-[40px] left-14 lg:left-3 flex items-center">
+          <div className="absolute w-[calc(100%-68px)] lg:w-[calc(100%-24px)] h-[38px] -top-[40px] left-14 lg:left-3 flex justify-between xl:justify-start items-center">
             {
               isRenaming ?
               <div className="inline-block">
-                <Input ref={newNoteNameInputRef} spellCheck="false" name="noteName" autoFocus onChange={(e) => handleRename(e.target)} value={newName} className="box-content max-h-[38px] py-0 text-base lg:text-xl bg-slate-300 border-blue-400 caret-blue-500 transition-transform duration-500 focus-visible:ring-0 focus:shadow-lg focus:scale-105"
+                <Input ref={newNoteNameInputRef} spellCheck="false" name="noteName" autoFocus onChange={(e) => handleRename(e.target)} value={newName} className="box-content max-h-[38px] py-0 text-base xl:text-xl bg-slate-300 border-blue-400 caret-blue-500 transition-transform duration-500 focus-visible:ring-0 focus:shadow-lg focus:scale-105"
                 />
                 <span
                   ref={spanRef}
-                  className="absolute max-w-14 -left-[9999px] invisible whitespace-pre text-base lg:text-xl"
+                  className="absolute max-w-14 sm:max-w-[310px] md:max-w-[390px] lg:max-w-[420px] xl:max-w-[162px] -left-[9999px] invisible whitespace-pre text-base xl:text-xl"
                 >
                   {newName}
                 </span>
               </div>:
-              <div className="truncate max-w-32 text-base lg:text-xl px-[13px]">{noteData ? noteData.title : 'Loading...'}</div>
+              <div className="truncate max-w-32 sm:max-w-[360px] md:max-w-[440px] lg:max-w-[470px] xl:max-w-[210px] text-base xl:text-xl px-[13px]">{noteData ? noteData.title : 'Loading...'}</div>
             }
-            <div
-              className="ml-1 lg:ml-2"
-              onClick={() => handleIsRenaming()}
-            >
-              <Button variant="editnote" size="sm">
-                {
-                  isRenaming ?
-                  <>
-                    <ArrowBigLeftDash size={18} />
-                    <p className="ml-1 text-sm lg:text-base">Save new name</p>
-                  </>:
-                  <>
-                    <PencilLine size={18} />
-                    <p className="ml-1 text-sm lg:text-base">{isLargeScreen ? `Rename note` : `Rename`}</p>
-                  </>
-                }
-              </Button>
-            </div>
-            <div
-              className="ml-1 lg:ml-2"
-              onClick={() => handleSave()}
-            >
-              <Button variant="editnote" size="sm">
-                <Save size={18} />
-                <p className="ml-1">{isLargeScreen ? `Save note` : `Save`}</p>
-              </Button>
+            <div className="flex">
+              <div
+                className="ml-1 lg:ml-2"
+                onClick={() => handleIsRenaming()}
+              >
+                <Button variant="editnote" size="sm">
+                  {
+                    isRenaming ?
+                    <>
+                      <ArrowBigLeftDash size={18} />
+                      <p className="ml-1 text-sm xl:text-base">Save new name</p>
+                    </>:
+                    <>
+                      <PencilLine size={18} />
+                      <p className="ml-1 text-sm xl:text-base">{isLargeScreen ? `Rename note` : `Rename`}</p>
+                    </>
+                  }
+                </Button>
+              </div>
+              <div
+                className="ml-1 lg:ml-2"
+                onClick={() => handleSave()}
+              >
+                <Button variant="editnote" size="sm">
+                  <Save size={18} />
+                  <p className="ml-1 text-sm xl:text-base">{isLargeScreen ? `Save note` : `Save`}</p>
+                </Button>
+              </div>
             </div>
           </div>
           <div
@@ -254,14 +230,13 @@ const ResizablePanels = () => {
             style={{ width: isLargeScreen ? `calc(${leftWidth}% - 10.5px)` : `100%` }}
             ref={editorContainerRef}
             onClick={e => {
-              console.log(e.target);
               e.stopPropagation();
               setEditorFocus(true);
             }}
           >
             <Editor input={input} setInput={setInput} editorFocus={editorFocus} initialContent={noteData?.content} currentNoteId={noteId} />
           </div>
-          <div className="md:cursor-ew-resize bg-black w-1/6 md:w-[5px] h-[5px] md:h-1/6 mt-2 rounded-xl" onMouseDown={startResizing}></div>
+          <div className="md:cursor-ew-resize bg-black w-1/6 md:w-[5px] h-[5px] md:h-1/6 mt-1 md:mt-0 rounded-xl" onMouseDown={startResizing}></div>
           <div
             suppressHydrationWarning
             className="h-full mt-2 overflow-auto bg-slate-400 rounded-lg flex flex-1 md:flex-initial flex-col"

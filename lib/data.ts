@@ -6,10 +6,10 @@ import { connectToDb } from "./utilsDb"
 import { revalidatePath } from "next/cache";
 import { NoteDocument } from "./models";
 
-export const getNotes = async () => {
+export const getNotes = async (userId: string) => {
   try {
     connectToDb();
-    const notes: NoteDocument[] = await Note.find().lean();
+    const notes: NoteDocument[] = await Note.find({ userId }).lean();
 
     return notes.map(note => ({
       ...note,
@@ -17,19 +17,17 @@ export const getNotes = async () => {
     }));
 
   } catch (error) {
-    console.log(error);
     throw new Error('Failed to fetch notes!');
   }
 };
 
-export const getUser = async (id: Types.ObjectId) => {
+export const getUser = async (id: string) => {
   try {
     connectToDb();
     const user = await User.findById(id);
 
-    return user;
+    return JSON.parse(JSON.stringify(user));
   } catch (error) {
-    console.log(error);
     throw new Error('Failed to fetch user!');
   }
 }

@@ -31,16 +31,12 @@ const initialState: NoteState = {
   newName: '',
 };
 
-export const fetchNotes = createAsyncThunk('notes/fetchNotes', async (_, thunkAPI) => {
+export const fetchNotes = createAsyncThunk('notes/fetchNotes', async (userId: string, thunkAPI) => {
   try {
-    console.log('fetchNotes called');
-    let notes: NoteDocument[] = await getNotes();
-
-    console.log('notes: ', notes);
+    let notes: NoteDocument[] = await getNotes(userId);
 
     return notes;
   } catch (error) {
-    console.log(error);
     return thunkAPI.rejectWithValue('Failed to fetch notes');
   }
 });
@@ -52,19 +48,6 @@ const noteSlice = createSlice({
     toggleIsDeleting: (state) => {
       state.isDeleting = !state.isDeleting;
     },
-    // renameNotes: (state, action: PayloadAction<RenamePayload>) => {
-    //   state.notes.forEach(note => {
-    //     if(note._id === action.payload._id) {
-    //       note.title = action.payload.newName;
-    //     }
-    //   });
-    // },
-    // setNewName: (state, action: PayloadAction<NewNamePayload>) => {
-    //   if(action.payload.renamingNoteId != state.renamingNoteId) {
-    //     state.renamingNoteId = action.payload.renamingNoteId;
-    //   }
-    //   state.newName = action.payload.newName;
-    // },
     renameNotes: (state, action: PayloadAction<RenamePayload>) => {
       if(action.payload.renamingNoteId != state.renamingNoteId) {
         state.renamingNoteId = action.payload.renamingNoteId;
@@ -74,8 +57,6 @@ const noteSlice = createSlice({
       if(action.payload.renamingFinish) {
         state.notes.forEach(note => {
           if(note._id === action.payload.renamingNoteId) {
-            console.log('note.title: ',note.title);
-            console.log('action.payload.newName: ', action.payload.newName);
             note.title = action.payload.newName;
           }
         }); 

@@ -67,9 +67,6 @@ const editorSlice = createSlice({
           break;
         }
       }
-
-      console.log('changedRowsLineNumberStart: ', changedRowsLineNumberStart);
-
       let changedRowsLineNumber: (number | string)[] = [changedRowsLineNumberStart! + 1];
 
       if(changedRowsCount.length === 1) {
@@ -77,7 +74,6 @@ const editorSlice = createSlice({
       }
 
       if(changedSection === '\n') {
-        console.log('return 1');
         state.rows = [...state.rows.slice(0, activeRow), ...changedRows, ...state.rows.slice(activeRow)];
         state.lineNumbers = [...state.lineNumbers.slice(0, activeRow), ...changedRowsLineNumber, ...offsetLineNumbers(state.lineNumbers.slice(activeRow), 1)];
         
@@ -86,7 +82,6 @@ const editorSlice = createSlice({
 
       // Only white spaces
       if(changedSection.split('').every(char => char === ' ')) {
-        console.log('return 2');
         state.rows = [...state.rows.slice(0, activeRow), ...changedRows, ...state.rows.slice(activeRow + 1)];
         state.lineNumbers = [...state.lineNumbers.slice(0, activeRow), ...changedRowsLineNumber, ...state.lineNumbers.slice(activeRow + 1)];
         
@@ -100,12 +95,6 @@ const editorSlice = createSlice({
         const changedRowsLineNumberBefore: (number | string)[] = transferLineCountsToLineNumbers(changedRowsCountBeforeNewline, changedRowsLineNumberStart + 1);
         const changedRowsLineNumberAfter: (number | string)[] = transferLineCountsToLineNumbers(changedRowsCountAfterNewline, changedRowsLineNumberStart + changedRowsCountBeforeNewline.length + 2);
 
-        console.log('changedRowsBeforeNewline: ', changedRowsBeforeNewline);
-        console.log('changedRowsAfterNewline: ', changedRowsAfterNewline);
-        console.log('changedRowsCountBeforeNewline: ', changedRowsCountBeforeNewline);
-        console.log('changedRowsCountAfterNewline: ', changedRowsCountAfterNewline);
-        
-        console.log('return 3')
         state.rows = [...state.rows.slice(0, activeRow), ...changedRowsBeforeNewline, ...changedRowsAfterNewline, ...state.rows.slice(activeRow + rowCountBeforeChange)];
         state.lineNumbers = [...state.lineNumbers.slice(0, activeRow), ...changedRowsLineNumberBefore, ...changedRowsLineNumberAfter, ...offsetLineNumbers(state.lineNumbers.slice(activeRow + rowCountBeforeChange), 1)];
         
@@ -113,7 +102,6 @@ const editorSlice = createSlice({
       }
 
       // Other situation
-      console.log('return 4');
       state.rows = [...state.rows.slice(0, activeRow), ...changedRows, ...state.rows.slice(activeRow + rowCountBeforeChange)];
       state.lineNumbers = [...state.lineNumbers.slice(0, activeRow), ...changedRowsLineNumber, ...state.lineNumbers.slice(activeRow + rowCountBeforeChange)];
 
@@ -128,10 +116,6 @@ const editorSlice = createSlice({
         changedRowsCount,
         deletedIsNewline,
       } = action.payload;
-
-      console.log('changedRows: ', changedRows);
-      console.log('changedRowsCount: ', changedRowsCount);
-      console.log('rowCountBeforeChange: ', rowCountBeforeChange);
 
       const suffixPrevLineNumbers = state.lineNumbers.slice(0, activeRow);
 
@@ -148,9 +132,6 @@ const editorSlice = createSlice({
         }
       }
 
-      console.log('changedRowsLineNumberStart: ', changedRowsLineNumberStart);
-      console.log('previousRowCount: ', previousRowCount);
-
       let changedRowsLineNumber: (number | string)[] = [changedRowsLineNumberStart! + 1];
 
       if(changedRowsCount.length === 1 && changedRowsCount[0] !== 0) {
@@ -158,22 +139,12 @@ const editorSlice = createSlice({
       }
 
       if(deletedIsNewline) {
-        console.log('state.lineNumbers.slice(0, activeRow): ', state.lineNumbers.slice(0, activeRow));
-        console.log('changedRowsLineNumber: ', changedRowsLineNumber);
-        console.log('offsetLineNumbers(state.lineNumbers.slice(activeRow + rowCountBeforeChange), -1): ', offsetLineNumbers(state.lineNumbers.slice(activeRow + rowCountBeforeChange), -1));
         state.rows = [...state.rows.slice(0, activeRow), ...changedRows, ...state.rows.slice(activeRow + rowCountBeforeChange)];
-        // state.rows = [...state.rows.slice(0, activeRow), ...changedRows, ...state.rows.slice(activeRow + rowCountBeforeChange)];
-        // state.lineNumbers = [...state.lineNumbers.slice(0, activeRow), ...offsetLineNumbers(state.lineNumbers.slice(activeRow + 1), -(rowCountBeforeChange - 1))];
         state.lineNumbers = [...state.lineNumbers.slice(0, activeRow), ...changedRowsLineNumber, ...offsetLineNumbers(state.lineNumbers.slice(activeRow + rowCountBeforeChange), -(lineNumbersOffset - 1))];
         return;
       }
 
-      console.log('state.rows.slice(0, activeRow): ', state.rows.slice(0, activeRow));
-      console.log('changedRows: ', changedRows);
-      console.log('state.rows.slice(activeRow + rowCountBeforeChange): ', state.rows.slice(activeRow + rowCountBeforeChange));
-
       state.rows = [...state.rows.slice(0, activeRow), ...changedRows, ...state.rows.slice(activeRow + rowCountBeforeChange)];
-      // state.rows = [...state.rows.slice(0, activeRow), ...changedRows, ...state.rows.slice(activeRow + changedRows.length)];
       state.lineNumbers = [...state.lineNumbers.slice(0, activeRow), ...changedRowsLineNumber, ...offsetLineNumbers(state.lineNumbers.slice(activeRow + rowCountBeforeChange), -(lineNumbersOffset - 1))];
       return;
     },

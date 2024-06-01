@@ -15,8 +15,7 @@ const userSchema = new mongoose.Schema(
     username: {
       type: String,
       required: true,
-      unique: true,
-      min: 3,
+      min: 2,
       max: 20,
     },
     email: {
@@ -31,7 +30,7 @@ const userSchema = new mongoose.Schema(
       min: 6,
     },
     img: {
-      type: String,
+      type: Buffer,
     }
   },
   { timestamps: true }

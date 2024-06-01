@@ -26,6 +26,7 @@ import { RootState } from "@/lib/store"
 type CheckboxReactHookFormMultipleProps = {
   items: NoteDocument[];
   transitioning: boolean;
+  userId: string;
 }
 
 const FormSchema = z.object({
@@ -34,7 +35,7 @@ const FormSchema = z.object({
   }),
 })
 
-export function CheckboxReactHookFormMultiple({ items, transitioning }: CheckboxReactHookFormMultipleProps) {
+export function CheckboxReactHookFormMultiple({ items, transitioning, userId }: CheckboxReactHookFormMultipleProps) {
   const pathname = usePathname().split('/');
   const noteId = pathname[pathname.length - 1];
 
@@ -52,8 +53,6 @@ export function CheckboxReactHookFormMultiple({ items, transitioning }: Checkbox
   })
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
-    console.log('data: ', data);
-
     const promise = deleteNotes(data.items);
 
     toast.promise(promise, {
@@ -67,7 +66,7 @@ export function CheckboxReactHookFormMultiple({ items, transitioning }: Checkbox
     // Toggle the state to trigger a re-render of Notes
     // setIsDeleting(false);
     dispatch(toggleIsDeleting())
-    dispatch(fetchNotes());
+    dispatch(fetchNotes(userId));
 
     if(data.items.includes(noteId) && data.items.length !== notes.length) {
       let latestNoteId; 
@@ -84,7 +83,7 @@ export function CheckboxReactHookFormMultiple({ items, transitioning }: Checkbox
 
       router.push(`/notes/${latestNoteId}`);
     } else if(data.items.includes(noteId) && data.items.length === notes.length) {
-      const promise = createNote();
+      const promise = createNote(userId);
 
       toast.promise(promise, {
         loading: 'Creating a new note...',
@@ -94,10 +93,8 @@ export function CheckboxReactHookFormMultiple({ items, transitioning }: Checkbox
 
       // Wait for the note creation to complete
       const createdNote = await promise;
-
-      console.log('createdNote', createdNote);
       
-      dispatch(fetchNotes());
+      dispatch(fetchNotes(userId));
 
       router.push(`/notes/${createdNote._id}`);
     }

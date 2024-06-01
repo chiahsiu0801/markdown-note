@@ -2,6 +2,7 @@ import { configureStore } from '@reduxjs/toolkit';
 import editorReducer from './features/editor/editorSlice';
 import sidebarReducer from './features/sidebar/sidebarSlice';
 import noteReducer from './features/note/noteSlice';
+import searchReducer from './features/search/searchSlice';
 
 export const makeStore = () => {
   return configureStore({
@@ -9,6 +10,7 @@ export const makeStore = () => {
       editor: editorReducer,
       sidebar: sidebarReducer,
       notes: noteReducer,
+      search: searchReducer,
     },
     middleware: (getDefaultMiddleware) =>
       getDefaultMiddleware({
