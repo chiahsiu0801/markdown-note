@@ -22,6 +22,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Spinner } from "@/components/spinner";
 import { LogIn } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 type AuthModalProps = {
   buttonText: string,
@@ -218,45 +219,35 @@ export function AuthModal({ buttonText, inContent }: AuthModalProps) {
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>{buttonText}</DialogTitle>
-          <DialogDescription>
+          <DialogDescription className={cn(buttonText !== 'Log in' && `hidden md:block`)}>
             Log in directly with
           </DialogDescription>
         </DialogHeader>
-        {
-          session ? (
-            <>
-              <Image alt="avatar" src={session.user?.image as string} width="80" height="80" />
-              <div>Welcome back, {session.user?.name}</div>
-              <div>{session.user?.email}</div>
-              <Button onClick={() => signOut({ callbackUrl: '/' })}>Sign out</Button>
-            </>
-          ) : (
-            <>
-              <Button
-                disabled={isLoading.github}
-                onClick={() => {
-                  handleGithubSubmit();
-                }}
-              >
-                { isLoading.github && <Spinner /> }
-                <FaGithub className="ml-2" />
-                <span className="mx-2">GitHub</span>
-              </Button>
-              <Button
-                disabled={isLoading.google}
-                onClick={() => {
-                  handleGoogleSubmit();
-                }}
-                variant="destructive"
-              >
-                { isLoading.google && <Spinner /> }
-                <FaGoogle className="ml-2" />
-                <span className="mx-2">Google</span>
-              </Button>
-            </>
-          )
-        }
-        <div className="flex justify-center items-center">
+        <div className={cn('flex flex-col gap-2', buttonText !== 'Log in' && 'hidden md:flex')}>
+          <Button
+            disabled={isLoading.github}
+            onClick={() => {
+              handleGithubSubmit();
+            }}
+          >
+            { isLoading.github && <Spinner /> }
+            <FaGithub className="ml-2" />
+            <span className="mx-2">GitHub</span>
+          </Button>
+          <Button
+            disabled={isLoading.google}
+            onClick={() => {
+              handleGoogleSubmit();
+            }}
+            variant="destructive"
+          >
+            { isLoading.google && <Spinner /> }
+            <FaGoogle className="ml-2" />
+            <span className="mx-2">Google</span>
+          </Button>
+        </div>
+        <div className={cn(`flex justify-center items-center`,
+        buttonText !== 'Log in' && `hidden md:flex`)}>
           <hr className="flex-1 mr-1" />
           <p>or</p>
           <hr className="flex-1 ml-1" />
