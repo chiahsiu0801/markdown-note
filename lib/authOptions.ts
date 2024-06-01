@@ -7,17 +7,11 @@ import { connectToDb } from "./utilsDb";
 import { User } from "./models";
 import bcrypt from "bcryptjs";
 import { JWT } from "next-auth/jwt";
-import { ObjectId } from "mongoose";
 
 import type { AdapterUser as BaseAdapterUser } from "next-auth/adapters";
 
 interface AdapterUser extends BaseAdapterUser {
   username: string;
-}
-
-interface JWTAuth extends JWT {
-  id: ObjectId;
-  name: string;
 }
 
 export const authOptions: NextAuthOptions = {
@@ -81,7 +75,7 @@ export const authOptions: NextAuthOptions = {
       
       return token;
     },
-    async session({ session, token, user }) {
+    async session({ session, token }) {
       return {
         ...session,
         user: {
@@ -89,8 +83,6 @@ export const authOptions: NextAuthOptions = {
           id: token.id ? token.id : token.sub,
         }
       }
-
-      return session;
     }
   }
 }
