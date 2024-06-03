@@ -10,7 +10,7 @@ const NotePage = () => {
 
   return (
     <main
-      className="h-[calc(100%-310px)] md:h-[calc(100%-250px)] lg:h-full py-0 lg:py-4 flex flex-grow transition-all ease-custom-ease duration-300 relative z-40 mt-0 pl-0 lg:pl-[260px]"
+      className="lg:max-h-screen min-h-[530px] h-[calc(100%-310px)] md:h-[calc(100%-250px)] lg:h-full py-0 lg:py-4 flex flex-grow transition-all ease-custom-ease duration-300 relative z-40 mt-0 pl-0 lg:pl-[260px]"
     >
       <div className="w-full py-4 px-6 mx-4 bg-slate-300 rounded-xl shadow-xl">
         <h1 className="text-2xl font-medium mb-2">Note dashboard</h1>

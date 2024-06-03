@@ -69,7 +69,7 @@ const Content = () => {
                 sequence={[
                   `## Basic annotations:\n# Header 1\n## Header 2\n### Header 3\n* List 1\n* List 2\n1. One\n2. Two\n3. Three`,
                   1000,
-                  `## Syntax highlighting:\n\`\`\`js\nimport React from 'react'\nimport ReactDOM from 'react-dom'\nexport default function MyApp() {\n\xa0\xa0return (\n\xa0\xa0\xa0\xa0<div>\n\xa0\xa0\xa0\xa0\xa0\xa0<h1>Welcome to my app</h1>\n\xa0\xa0\xa0\xa0</div>);\n}\n\`\`\``,
+                  `## Syntax highlighting:\n\`\`\`js\nconsole.log('Hello World !')\n\`\`\`\n\`\`\`python\nprint('Hello World !')\n\`\`\`\n\`\`\`c\nprintf("Hello! World!");\n\`\`\``,
                   1000,
                   `## Other common usages:\n[Link](http://a.com)\n> Blockquote\n\n\`Inline code\` with backticks\n\n~~strikethrough~~\n\n*Italic*\n\n**Bold**\n* [ ] task list\n* [x] checked item`,
                   1000,

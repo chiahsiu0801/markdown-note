@@ -102,7 +102,7 @@ export function DataTable<TData extends HasId, TValue>({
           ) : (
             <TableRow>
               <TableCell colSpan={columns.length} className="h-24 text-center">
-                No results.
+                No results, press the button in the side bar to create new note.
               </TableCell>
             </TableRow>
           )}

@@ -1,6 +1,7 @@
 import { textSplitIntoRow } from "@/lib/utils";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import Skeleton from "react-loading-skeleton";
 
 type EditorMobileProps = {
   input: string;
@@ -32,7 +33,7 @@ const EditorMobile = ({ input, setInput, editorFocus, initialContent }: EditorMo
     const lineNumbersNode = lineNumbersRef.current;
     const textareaNode = textareaRef.current;
 
-    if(lineNumbersNode) {
+    if(lineNumbersNode && textareaNode) {
       const syncScroll = () => {
           const scrollTop = textareaNode!.scrollTop;
 
@@ -49,7 +50,7 @@ const EditorMobile = ({ input, setInput, editorFocus, initialContent }: EditorMo
     if(initialContent) {
       calculateLineNumbers(initialContent);
     }
-  }, [initialContent]);  
+  }, [initialContent]);
 
   const calculateLineNumbers = (input: string) => {
     const lines = input.split('\n');
@@ -91,21 +92,25 @@ const EditorMobile = ({ input, setInput, editorFocus, initialContent }: EditorMo
         className="h-full text-lg bg-slate-400 absolute font-mono z-10 overflow-auto cursor-text"
         style={{ width: 'calc(100% - 88px)', height: 'calc(100% - 40px)', left: '68px' }}
       >
-        <textarea
-          ref={textareaRef}
-          value={input}
-          autoFocus
-          onChange={(e) => {
-            setInput(e.target.value);
-            calculateLineNumbers(e.target.value);
-          }}
-          wrap="on"
-          autoComplete="off"
-          autoCapitalize="off"
-          spellCheck="false"
-          className="text-[18px] w-full h-full text-lg bg-transparent font-mono resize-none focus:outline-none absolute left-0 top-0 -z-10 overflow-scroll caret-blue-500"
-          style={{ fontFeatureSettings: `"liga" 0, "calt" 0`, fontVariationSettings: "normal", letterSpacing: "0" }}
-        />
+        {
+          !initialContent && initialContent !== '' ?
+          <Skeleton count={36} className="overflow-hidden" />:
+          <textarea
+            ref={textareaRef}
+            value={input}
+            autoFocus
+            onChange={(e) => {
+              setInput(e.target.value);
+              calculateLineNumbers(e.target.value);
+            }}
+            wrap="on"
+            autoComplete="off"
+            autoCapitalize="off"
+            spellCheck="false"
+            className="text-[18px] w-full h-full text-lg bg-transparent font-mono resize-none focus:outline-none absolute left-0 top-0 -z-10 overflow-scroll caret-blue-500"
+            style={{ fontFeatureSettings: `"liga" 0, "calt" 0`, fontVariationSettings: "normal", letterSpacing: "0" }}
+          />
+        }
       </div>
     </>
    );

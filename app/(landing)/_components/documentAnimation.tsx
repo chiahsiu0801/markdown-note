@@ -16,7 +16,7 @@ const DocumentAnimation = ({ animationInput }: { animationInput: string }) => {
           const match = /language-(\w+)/.exec(className || '');
 
           return !inline && match ? (
-            <SyntaxHighlighter style={vscDarkPlus} PreTag="div" language={match[1]} showLineNumbers lineNumberStyle={{ minWidth: '3.25em' }} codeTagProps={{className: `language-${match[1]}`, style: { fontSize: '16px' }}} {...props}>
+            <SyntaxHighlighter style={vscDarkPlus} PreTag="div" language={match[1]} codeTagProps={{className: `language-${match[1]}`, style: { fontSize: '16px' }}} {...props}>
               {String(children).replace(/\n$/, '')}
             </SyntaxHighlighter>
           ) : (

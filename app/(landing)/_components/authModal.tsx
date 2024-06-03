@@ -67,7 +67,12 @@ export function AuthModal({ buttonText, inContent }: AuthModalProps) {
       .min(6, {
         message: "Confirm-Password must be at least 6 characters.",
       }),
-    avatarImg: z.instanceof(File).optional().refine((file) => file!.size <= 2000000, `Max image size is 2MB.`),
+    avatarImg: z
+      .instanceof(File)
+      .optional()
+      .refine((file) => !file || file.size <= 2000000, {
+        message: `Max image size is 2MB.`,
+      }),
   }).superRefine(({ confirmPassword, password }, ctx) => {
     if(confirmPassword !== password) {
       ctx.addIssue({
@@ -200,7 +205,6 @@ export function AuthModal({ buttonText, inContent }: AuthModalProps) {
           <Button variant="outline">{buttonText}</Button> :
           <Button 
             variant="default"
-
           >
             {
               inContent ? (
@@ -214,14 +218,14 @@ export function AuthModal({ buttonText, inContent }: AuthModalProps) {
           </Button> 
         }
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] overflow-y-scroll max-h-screen">
         <DialogHeader>
           <DialogTitle>{buttonText}</DialogTitle>
-          <DialogDescription className={cn(buttonText !== 'Log in' && `hidden md:block`)}>
+          <DialogDescription>
             Log in directly with
           </DialogDescription>
         </DialogHeader>
-        <div className={cn('flex flex-col gap-2', buttonText !== 'Log in' && 'hidden md:flex')}>
+        <div className="flex flex-col gap-2">
           <Button
             disabled={isLoading.github}
             onClick={() => {
@@ -244,8 +248,7 @@ export function AuthModal({ buttonText, inContent }: AuthModalProps) {
             <span className="mx-2">Google</span>
           </Button>
         </div>
-        <div className={cn(`flex justify-center items-center`,
-        buttonText !== 'Log in' && `hidden md:flex`)}>
+        <div className="flex justify-center items-center">
           <hr className="flex-1 mr-1" />
           <p>or</p>
           <hr className="flex-1 ml-1" />
