@@ -67,12 +67,7 @@ export function AuthModal({ buttonText, inContent }: AuthModalProps) {
       .min(6, {
         message: "Confirm-Password must be at least 6 characters.",
       }),
-    avatarImg: z
-      .instanceof(File)
-      .optional()
-      .refine((file) => !file || file.size <= 2000000, {
-        message: `Max image size is 2MB.`,
-      }),
+    avatarImg: z.instanceof(File).optional().refine((file) => file!.size <= 2000000, `Max image size is 2MB.`),
   }).superRefine(({ confirmPassword, password }, ctx) => {
     if(confirmPassword !== password) {
       ctx.addIssue({
@@ -218,7 +213,7 @@ export function AuthModal({ buttonText, inContent }: AuthModalProps) {
           </Button> 
         }
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px] overflow-y-scroll max-h-screen">
+      <DialogContent className="sm:max-w-[425px] overflow-y-scroll max-h-dvh">
         <DialogHeader>
           <DialogTitle>{buttonText}</DialogTitle>
           <DialogDescription>
