@@ -18,6 +18,7 @@ import EditorMobile from "../../../components/editorMobile";
 
 const ResizablePanels = () => {
   const dispatch = useAppDispatch();
+  const router = useRouter();
 
   const { sidebarCollapse } = useAppSelector((state: RootState) => state.sidebar);
   const { notes, newName } = useAppSelector((state: RootState) => state.notes);
@@ -133,7 +134,7 @@ const ResizablePanels = () => {
         setInput(foundNote?.content || '');
       }
     }
-  }, [notes, noteId, noteData?._id]);
+  }, [notes, noteId, noteData?._id, dispatch, router]);
 
   useEffect(() => {
     window.addEventListener('click', (e) => {

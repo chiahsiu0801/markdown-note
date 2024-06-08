@@ -14,6 +14,12 @@ export async function generateMetadata(
 
   const note = await getNote(id);
 
+  if(!note) {
+    return {
+      title: 'Redirect...',
+    }
+  }
+
   return {
     title: note.title,
   }

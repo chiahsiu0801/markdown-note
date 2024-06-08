@@ -21,6 +21,7 @@ type RenamePayload = {
 type UpdatePayload = {
   updatingNoteId: string;
   newContent: string;
+  clear?: boolean;
 }
 
 const initialState: NoteState = {
@@ -68,7 +69,11 @@ const noteSlice = createSlice({
       state.notes.forEach(note => {
         if(note._id === action.payload.updatingNoteId) {
           note.content = action.payload.newContent;
-          state.lastUpdatedNoteId = action.payload.updatingNoteId;
+          if(action.payload.clear) {
+            state.lastUpdatedNoteId = '';
+          } else {
+            state.lastUpdatedNoteId = action.payload.updatingNoteId;
+          }
         }
       })
     }

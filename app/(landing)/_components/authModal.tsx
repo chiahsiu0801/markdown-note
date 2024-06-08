@@ -67,7 +67,7 @@ export function AuthModal({ buttonText, inContent }: AuthModalProps) {
       .min(6, {
         message: "Confirm-Password must be at least 6 characters.",
       }),
-    avatarImg: z.instanceof(File).optional().refine((file) => file!.size <= 2000000, `Max image size is 2MB.`),
+    avatarImg: z.instanceof(File).optional().refine((file) => !file || file.size <= 2000000, `Max image size is 2MB.`),
   }).superRefine(({ confirmPassword, password }, ctx) => {
     if(confirmPassword !== password) {
       ctx.addIssue({

@@ -69,6 +69,10 @@ const Sidebar = () => {
   }
 
   const findLatest = () => {
+    if(!lastUpdatedNoteId) {
+      return '';
+    }
+
     if(lastUpdatedNoteId) {
       return lastUpdatedNoteId;
     }

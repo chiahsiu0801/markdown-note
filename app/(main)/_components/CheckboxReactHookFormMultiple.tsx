@@ -19,7 +19,7 @@ import { useState } from "react"
 import { createNote, deleteNotes } from "@/lib/action"
 import { toast } from "sonner"
 import { useAppDispatch, useAppSelector } from "@/lib/hooks"
-import { fetchNotes, toggleIsDeleting } from "@/lib/features/note/noteSlice"
+import { fetchNotes, toggleIsDeleting, updateNote } from "@/lib/features/note/noteSlice"
 import { usePathname, useRouter } from "next/navigation"
 import { RootState } from "@/lib/store"
 
@@ -42,7 +42,7 @@ export function CheckboxReactHookFormMultiple({ items, transitioning, userId }: 
   const router = useRouter();
   
   const dispatch = useAppDispatch();
-  const { notes } = useAppSelector((state: RootState) => state.notes);
+  const { notes, lastUpdatedNoteId } = useAppSelector((state: RootState) => state.notes);
   const [checkedCount, setCheckedCount] = useState(0);
 
   const form = useForm<z.infer<typeof FormSchema>>({
@@ -53,6 +53,14 @@ export function CheckboxReactHookFormMultiple({ items, transitioning, userId }: 
   })
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
+    if(data.items.includes(lastUpdatedNoteId)) {
+      dispatch(updateNote({
+        newContent: '',
+        updatingNoteId: lastUpdatedNoteId,
+        clear: true,
+      }))
+    }
+
     const promise = deleteNotes(data.items);
 
     toast.promise(promise, {
